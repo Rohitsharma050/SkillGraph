@@ -1,0 +1,20 @@
+import React from 'react'
+import { HeroSection } from '../Components/HeroSection'
+import ProblemSection from '../Components/ProblemSection'
+import SolutionSection from '../Components/SolutionSection'
+import CTASection from '../Components/CTASection'
+import Footer from '../Components/Footer'
+
+const LandingPage = () => {
+  return (
+    <>
+    <HeroSection/>
+    <ProblemSection/>
+    <SolutionSection/>
+    <CTASection/>
+    <Footer/>
+    </>
+  )
+}
+
+export default LandingPage
