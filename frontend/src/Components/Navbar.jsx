@@ -1,8 +1,13 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
+import { useNavigate , Link } from 'react-router-dom'
+import { useContext } from 'react'
+import { AppContext } from '../Context/AppContext'
 
 export const Navbar = () => {
+  const navigate = useNavigate()
+  const {token} = useContext(AppContext)
   return (
     <div className='w-full flex justify-center pt-5 px-10 '>
 
@@ -48,17 +53,25 @@ export const Navbar = () => {
         </div>
 
         {/* Buttons */}
-        <div className='flex items-center gap-5'>
+        {
+          !token?
+          <div className='flex items-center gap-5'>
 
-          <button className='    font-semibold text-gray-700 hover:text-black transition duration-300'>
+          <button onClick={()=>navigate('/login')} className='    font-semibold text-gray-700 hover:text-black transition duration-300'>
             Sign In
           </button>
 
-          <button className='bg-black text-white px-4 py-1  rounded-full font-semibold hover:bg-gray-800 transition duration-300'>
+          <button onClick={()=>navigate('/signup')} className='bg-black text-white px-4 py-1  rounded-full font-semibold hover:bg-gray-800 transition duration-300'>
             Sign Up
           </button>
 
-        </div>
+        </div>:
+        
+          <button onClick={()=>navigate('/dashboard')} className='bg-black text-white px-4 py-1  rounded-full font-semibold hover:bg-gray-800 transition duration-300'>
+            Dashboard
+          </button>
+        }
+        
 
       </div>
 

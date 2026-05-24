@@ -13,7 +13,7 @@ const Footer = () => {
           <div>
 
             <h1 className="text-3xl font-bold tracking-tight">
-              SkillGraph+
+              SkillGraph
             </h1>
 
             <p className="mt-5 text-sm md:text-base text-gray-600 leading-relaxed max-w-sm">
@@ -62,7 +62,7 @@ const Footer = () => {
             </h2>
 
             <p className="mt-5 text-gray-600 text-sm leading-relaxed">
-              Join SkillGraph+ and experience adaptive career
+              Join SkillGraph and experience adaptive career
               progression powered by graph optimization.
             </p>
 
