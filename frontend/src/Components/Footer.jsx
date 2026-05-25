@@ -34,19 +34,19 @@ const Footer = () => {
 
             <div className="mt-5 flex flex-col gap-3 text-gray-600">
 
-              <a href="#" className="hover:text-black transition">
+              <a href="/about" className="hover:text-black transition">
                 About Us
               </a>
 
-              <a href="#" className="hover:text-black transition">
+              <a href="/policy" className="hover:text-black transition">
                 Privacy Policy
               </a>
 
-              <a href="#" className="hover:text-black transition">
+              <a href="/terms" className="hover:text-black transition">
                 Terms & Services
               </a>
 
-              <a href="#" className="hover:text-black transition">
+              <a href="/support" className="hover:text-black transition">
                 Contact
               </a>
 

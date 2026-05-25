@@ -26,26 +26,27 @@ export const Navbar = () => {
 
             <NavLink to='/'>
               <li className='hover:text-black transition duration-300 cursor-pointer'>
-                Discover
+                Home 
               </li>
             </NavLink>
 
-            <NavLink to='/pricing'>
+            <a href="#features" scroll>
               <li className='hover:text-black transition duration-300 cursor-pointer'>
                 Features
               </li>
-            </NavLink>
+            </a>
+            
 
-            <NavLink to='/blog'>
+            <NavLink to='/guide'>
               <li className='hover:text-black transition duration-300 cursor-pointer'>
                 Blog
               </li>
             </NavLink>
 
-            <NavLink to='/explore'>
+            <NavLink to='/support'>
               <li className='flex items-center gap-1 hover:text-black transition duration-300 cursor-pointer'>
-                Explore
-                <ChevronDown size={20} />
+                Support
+                
               </li>
             </NavLink>
 
