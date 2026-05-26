@@ -6,12 +6,14 @@ import LandingPage from './Pages/LandingPage'
 import {Route,Routes} from 'react-router-dom'
 import LoginPage from './Pages/LoginPage'
 import SignupPage from './Pages/SignupPage'
-import Dashboard from './Pages/Dashboard'
+import Dashboard from './SkillGraph/Dashboard'
 import About from './Pages/About'
 import PrivacyPolicy from './Pages/PrivacyPolicy'
 import TermsOfService from './Pages/TermsOfServices'
 import Support from './Pages/Support'
 import Steps from './Pages/Steps'
+import JobDashboard from './JobTracker/JobDashboard'
+import Profile from './SkillGraph/Profile'
 function App() {
   
 
@@ -28,7 +30,10 @@ function App() {
         <Route path='/terms' element = {<TermsOfService/>}/>
         <Route path='/support' element = {<Support/>}/>
         <Route path='/guide' element = {<Steps/>}/>
+        <Route path='/jobtracker/dashboard' element = {<JobDashboard/>}/>
+        <Route path='/profile' element = {<Profile/>}/>
       </Routes>
+
       
     </>
   )
