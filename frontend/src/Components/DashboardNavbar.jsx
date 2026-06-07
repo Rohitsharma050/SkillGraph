@@ -15,7 +15,7 @@ const DashboardNavbar = () => {
   top-0
   z-50
   w-full
-  border-b
+  border-b  
   border-black/10
   bg-white
   px-6

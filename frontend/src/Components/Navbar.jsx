@@ -30,7 +30,7 @@ export const Navbar = () => {
               </li>
             </NavLink>
 
-            <a href="#features" scroll>
+            <a href="#features">
               <li className='hover:text-black transition duration-300 cursor-pointer'>
                 Features
               </li>
