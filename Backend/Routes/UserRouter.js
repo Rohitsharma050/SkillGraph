@@ -1,11 +1,16 @@
 import express from "express";
-import { googleLogin, loginUser, registerUser } from "../Controllers/UserController.js";
+import { googleLogin, loginUser, registerUser, getProfile, updateProfile } from "../Controllers/userController.js";
+import authMiddleware from "../Middleware/authMiddleware.js";
+import { uploadProfile } from "../Config/Cloudinary.js";
 
 export const userRouter = express.Router()
 
 
-userRouter.post('/signup',registerUser)
-userRouter.post('/login',loginUser)
+// ---- Auth routes (unchanged) ----
+userRouter.post('/signup', registerUser)
+userRouter.post('/login', loginUser)
+userRouter.post('/googleAuth', googleLogin)
 
-userRouter.post('/googleAuth',googleLogin)
-
+// ---- Profile routes (protected) ----
+userRouter.get('/profile', authMiddleware, getProfile)
+userRouter.put('/profile', authMiddleware, uploadProfile, updateProfile)

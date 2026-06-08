@@ -3,13 +3,9 @@ import dotenv from "dotenv";
 import cors from "cors";
 import connectDb from "./Config/db.js";
 import { userRouter } from "./Routes/UserRouter.js";
-
+import dns from "dns";
 const result = dotenv.config({ path: "./.env" });
-
-console.log("cwd:", process.cwd());
-console.log("dotenv result:", result);
-console.log("MONGODB_URI:", process.env.MONGODB_URI);
-console.log("PORT:", process.env.PORT);
+ dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
 const app = express();
 

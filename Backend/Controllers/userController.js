@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt'
 import { OAuth2Client } from "google-auth-library"
 import jwt from 'jsonwebtoken'
 import axios from 'axios'
+import { uploadToCloudinary } from "../Config/Cloudinary.js"
 
 // ------------ Normal user Register/signup 
 export const registerUser = async (req,res)=>{
@@ -91,7 +92,12 @@ export const googleLogin = async (req,res)=>{
                 authProvider:"google",
                 profilePicture:picture
             })
+        } else if (!user.profilePicture && picture) {
+            // Update Google picture if user has no profile picture stored
+            user.profilePicture = picture;
+            await user.save();
         }
+
         const payload = {id:user._id}
         const token = jwt.sign(
         payload,
@@ -166,3 +172,98 @@ export const loginUser = async (req,res)=>{
         })
     }
 }   
+
+
+// ------------ GET /api/user/profile ------------
+export const getProfile = async (req, res) => {
+    try {
+        const user = await userModel.findById(req.userId).select("-password");
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        return res.json({
+            success: true,
+            user: {
+                name: user.name,
+                email: user.email,
+                role: user.targetRole,
+                image: user.profilePicture,
+                resumeUrl: user.resumeUrl,
+                skills: user.skills,
+                authProvider: user.authProvider,
+            },
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
+// ------------ PUT /api/user/profile ------------
+export const updateProfile = async (req, res) => {
+    try {
+        const user = await userModel.findById(req.userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        // Parse fields from body
+        const { name, role, skills } = req.body;
+
+        if (name !== undefined) user.name = name.trim();
+        if (role !== undefined) user.targetRole = role;
+
+        // Skills come as JSON string from FormData
+        if (skills !== undefined) {
+            try {
+                user.skills = typeof skills === "string" ? JSON.parse(skills) : skills;
+            } catch {
+                user.skills = [];
+            }
+        }
+
+        // Handle profile image upload to Cloudinary
+        if (req.files && req.files.image && req.files.image[0]) {
+            const imageBuffer = req.files.image[0].buffer;
+            const result = await uploadToCloudinary(imageBuffer, {
+                folder: "skillgraph/profile-images",
+                transformation: [{ width: 400, height: 400, crop: "fill", gravity: "face" }],
+            });
+            user.profilePicture = result.secure_url;
+        }
+
+        // Handle resume upload to Cloudinary
+        if (req.files && req.files.resume && req.files.resume[0]) {
+            const resumeBuffer = req.files.resume[0].buffer;
+            const resumeOriginalName = req.files.resume[0].originalname;
+            const result = await uploadToCloudinary(resumeBuffer, {
+                folder: "skillgraph/resumes",
+                resource_type: "raw",
+                public_id: `resume_${req.userId}_${Date.now()}`,
+            });
+            user.resumeUrl = result.secure_url;
+        }
+
+        await user.save();
+
+        return res.json({
+            success: true,
+            message: "Profile updated successfully",
+            user: {
+                name: user.name,
+                email: user.email,
+                role: user.targetRole,
+                image: user.profilePicture,
+                resumeUrl: user.resumeUrl,
+                skills: user.skills,
+                authProvider: user.authProvider,
+            },
+        });
+    } catch (error) {
+        console.error("Profile update error:", error.message);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
