@@ -31,20 +31,9 @@ const onSubmitHandler =async (e)=>{
     }
 }
   return (
-    <section className="min-h-screen my-12 flex items-center justify-center px-6">
+    <section className="min-h-screen bg-zinc-50 flex items-center justify-center px-6 py-20">
 
-      <div
-        className="
-        w-full
-        max-w-md
-        bg-white
-        rounded-[32px]
-        p-8
-        border
-        border-black/10
-        shadow-sm
-        "
-      >
+      <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-zinc-200 shadow-sm">
 
         {/* Heading */}
         <div>
@@ -87,18 +76,7 @@ const onSubmitHandler =async (e)=>{
           value={name}
             type="text"
             placeholder="Full Name"
-            className="
-            w-full
-            border
-            border-black/10
-            rounded-2xl
-            px-5
-            py-3
-            outline-none
-            focus:border-black
-            transition-all
-            duration-300
-            "
+            className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-100 transition-all duration-200"
           />
 
           <input
@@ -106,18 +84,7 @@ const onSubmitHandler =async (e)=>{
           value={email}
             type="email"
             placeholder="Email"
-            className="
-            w-full
-            border
-            border-black/10
-            rounded-2xl
-            px-5
-            py-3
-            outline-none
-            focus:border-black
-            transition-all
-            duration-300
-            "
+            className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-100 transition-all duration-200"
           />
 
           <input
@@ -125,34 +92,11 @@ const onSubmitHandler =async (e)=>{
           value={password}
             type="password"
             placeholder="Password"
-            className="
-            w-full
-            border
-            border-black/10
-            rounded-2xl
-            px-5
-            py-3
-            outline-none
-            focus:border-black
-            transition-all
-            duration-300
-            "
+            className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-100 transition-all duration-200"
           />
 
           {/* Signup Button */}
-          <button
-            className="
-            w-full
-            bg-black
-            text-white
-            py-3
-            rounded-2xl
-            font-semibold
-            hover:bg-gray-800
-            transition-all
-            duration-300
-            "
-          >
+          <button className="w-full bg-zinc-900 text-white py-3 rounded-xl text-sm font-semibold hover:bg-zinc-700 transition-colors duration-200">
             Sign Up
           </button>
 

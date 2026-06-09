@@ -11,7 +11,7 @@ const Steps = () => {
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4 }}
-          className="flex items-center gap-2 py-10 text-[#aaa] hover:text-[#1a1a1a] transition"
+          className="flex items-center gap-2 py-10 text-zinc-400 hover:text-zinc-800 transition"
         >
           <ArrowLeft className="h-4 w-4" />
           <Link to="/" className="text-sm">Back to Home</Link>
@@ -31,7 +31,7 @@ const Steps = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-3xl md:text-4xl font-extrabold text-[#1a1a1a] leading-tight"
+          className="text-3xl md:text-4xl font-extrabold text-zinc-900 leading-tight"
         >
           Accelerate your career path <br /> in three simple steps
         </motion.h1>
@@ -44,7 +44,7 @@ const Steps = () => {
           whileInView="visible"
           viewport={{ once: true }}
           variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.15 } } }}
-          className="grid grid-cols-1 md:grid-cols-3 border-t border-[#e8e3dc]"
+          className="grid grid-cols-1 md:grid-cols-3 border-t border-zinc-200"
         >
           {[
             { 
@@ -68,13 +68,13 @@ const Steps = () => {
               key={i}
               variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
               transition={{ duration: 0.6 }}
-              className={`px-10 py-24 ${step.highlight ? "bg-[#faf7f2] relative" : ""}`}
+              className={`px-10 py-24 ${step.highlight ? "bg-zinc-50 relative" : ""}`}
             >
-              <div className="text-7xl font-light text-[#e8e3dc] mb-10">{step.num}</div>
-              <h3 className="text-xl font-semibold text-[#1a1a1a] mb-2">{step.title}</h3>
-              {step.highlight && <div className="w-8 h-[2px] bg-[#1a1a1a] mb-6" />}
+              <div className="text-7xl font-light text-zinc-200 mb-10">{step.num}</div>
+              <h3 className="text-xl font-semibold text-zinc-900 mb-2">{step.title}</h3>
+              {step.highlight && <div className="w-8 h-[2px] bg-zinc-900 mb-6" />}
               {!step.highlight && <div className="mb-4" />}
-              <p className="text-sm leading-relaxed text-[#888] max-w-xs">{step.desc}</p>
+              <p className="text-sm leading-relaxed text-zinc-400 max-w-xs">{step.desc}</p>
             </motion.div>
           ))}
         </motion.div>
@@ -85,9 +85,9 @@ const Steps = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mt-24 border border-[#e8e3dc] bg-[#faf7f2] rounded-2xl px-10 md:px-20 py-14"
+          className="mt-24 border border-zinc-200 bg-zinc-50 rounded-2xl px-10 md:px-20 py-14"
         >
-          <p className="text-xs tracking-widest text-[#aaa] mb-8 uppercase">
+          <p className="text-xs tracking-widest text-zinc-400 mb-8 uppercase">
             Pro Tips for Career Graph Optimization
           </p>
 
@@ -99,8 +99,8 @@ const Steps = () => {
               { title: "Review Curated Resources", desc: "Utilize the mapped code documentations and verified video channels pinned to your active skill nodes to accelerate learning." },
             ].map((item, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                <h3 className="text-base font-semibold text-[#1a1a1a] mb-2">{item.title}</h3>
-                <p className="text-sm text-[#888] leading-relaxed">{item.desc}</p>
+                <h3 className="text-base font-semibold text-zinc-900 mb-2">{item.title}</h3>
+                <p className="text-sm text-zinc-400 leading-relaxed">{item.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -119,7 +119,7 @@ const Steps = () => {
               Ready to map your engineering career?
             </h2>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link to="/dashboard" className="rounded-full bg-white px-8 py-3 text-sm font-semibold text-[#1a1a1a] hover:bg-[#f5f1eb] transition">
+              <Link to="/dashboard" className="rounded-full bg-white px-8 py-3 text-sm font-semibold text-zinc-900 hover:bg-zinc-100 transition">
                 Build Your Graph — Free
               </Link>
               <Link to="/about" className="rounded-full border border-white/20 px-8 py-3 text-sm font-semibold text-white hover:bg-white/10 transition">

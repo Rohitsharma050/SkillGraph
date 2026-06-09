@@ -1,110 +1,82 @@
 import React from "react";
 
+const problems = [
+  {
+    num: "01",
+    title: "Unstructured Learning Paths",
+    body: "Most roadmaps are flat lists of technologies without dependency awareness. Learners end up studying advanced topics before mastering the foundations they actually need.",
+  },
+  {
+    num: "02",
+    title: "Generic AI Recommendations",
+    body: "AI-generated suggestions often lack explainability. Users don't understand why a skill is being recommended, what it unlocks, or where it fits in their actual learning sequence.",
+    highlight: true,
+  },
+  {
+    num: "03",
+    title: "Job Tracking Disconnect",
+    body: "Learning and job hunting happen in separate silos — spreadsheets, emails, Notion pages. Progress on skills and application pipelines are never connected.",
+  },
+];
+
 const ProblemSection = () => {
   return (
-    <section className="w-full bg-white text-black py-40 px-6 md:px-2">
+    <section className="w-full bg-zinc-50 border-t border-zinc-100 py-24 px-6 md:px-10">
+      <div className="max-w-7xl mx-auto">
 
-      {/* Heading Section */}
-      <div className="max-w-5xl mx-12">
-
-        <h1 className="text-3xl md:text-3xl font-bold leading-tight tracking-tight max-w-4xl">
-          The Career Learning Problems
-          
-        </h1>
-
-        <p className="mt-6 text-base md:text-lg text-gray-600 leading-relaxed max-w-3xl">
-          Students today have unlimited access to courses, tutorials, <br />
-          and roadmaps. Yet most learners still struggle to answer one
-          critical question:
-        </p>
-
-        <p className="mt-4 text-xl md:text-2xl font-semibold">
-          “What should I learn next?”
-        </p>
-
-       
-      </div>
-
-      {/* Cards */}
-      <div className="max-w-6xl mx-auto mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        {/* Card 1 */}
-        <div className="border border-gray-200 rounded-2xl p-6 hover:shadow-md transition duration-300">
-          
-          <div className="w-10 h-10 rounded-full border border-black flex items-center justify-center text-sm font-semibold">
-            01
-          </div>
-
-          <h2 className="mt-5 text-xl font-semibold">
-            Unstructured Learning Paths
+        {/* Heading */}
+        <div className="max-w-2xl mb-14">
+          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-zinc-400 mb-4">
+            The Problem
+          </p>
+          <h2 className="text-3xl md:text-4xl font-bold leading-tight tracking-tight text-zinc-900">
+            Why most learners stall.
           </h2>
-
-          <p className="mt-3 text-sm md:text-base text-gray-600 leading-relaxed">
-            Most career roadmaps are flat lists of technologies without
-            dependency awareness. Learners often study advanced concepts
-            before mastering foundations.
+          <p className="mt-4 text-base text-zinc-500 leading-relaxed">
+            Unlimited resources, but still stuck on the same question:{" "}
+            <span className="text-zinc-800 font-medium">what should I learn next?</span>
           </p>
         </div>
 
-        {/* Card 2 */}
-        <div className="bg-black text-white rounded-2xl p-6 hover:shadow-md transition duration-300">
+        {/* Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {problems.map((p, i) => (
+            <div
+              key={i}
+              className={`rounded-xl p-7 border transition-shadow duration-200 hover:shadow-sm ${
+                p.highlight
+                  ? "bg-zinc-900 border-zinc-800 text-white"
+                  : "bg-white border-zinc-200 text-zinc-900"
+              }`}
+            >
+              <span
+                className={`text-xs font-semibold tracking-widest ${
+                  p.highlight ? "text-zinc-400" : "text-zinc-400"
+                }`}
+              >
+                {p.num}
+              </span>
 
-          <div className="w-10 h-10 rounded-full border border-white flex items-center justify-center text-sm font-semibold">
-            02
-          </div>
+              <h3
+                className={`mt-4 text-lg font-semibold leading-snug ${
+                  p.highlight ? "text-white" : "text-zinc-900"
+                }`}
+              >
+                {p.title}
+              </h3>
 
-          <h2 className="mt-5 text-xl font-semibold">
-            Generic AI Recommendations
-          </h2>
-
-          <p className="mt-3 text-sm md:text-base text-gray-300 leading-relaxed">
-            AI-generated recommendations often lack explainability.
-            Users don’t understand why a skill matters or what it unlocks.
-          </p>
+              <p
+                className={`mt-3 text-sm leading-relaxed ${
+                  p.highlight ? "text-zinc-400" : "text-zinc-500"
+                }`}
+              >
+                {p.body}
+              </p>
+            </div>
+          ))}
         </div>
-
-        {/* Card 3 */}
-        <div className="border border-gray-200 rounded-2xl p-6 hover:shadow-md transition duration-300">
-
-          <div className="w-10 h-10 rounded-full border border-black flex items-center justify-center text-sm font-semibold">
-            03
-          </div>
-
-          <h2 className="mt-5 text-xl font-semibold">
-            Time Constraints
-          </h2>
-
-          <p className="mt-3 text-sm md:text-base text-gray-600 leading-relaxed">
-            Students must optimize learning under limited time and
-            cognitive constraints, but most systems fail to prioritize
-            high-impact skills efficiently.
-          </p>
-        </div>
-
-     
-{/* Card 4 */}
-<div className="border border-gray-200 rounded-2xl p-6 hover:shadow-md transition duration-300 md:col-span-2 lg:col-span-3">
-
-  <div className="w-10 h-10 rounded-full border border-black flex items-center justify-center text-sm font-semibold">
-    04
-  </div>
-
-  <h2 className="mt-5 text-xl font-semibold">
-    Scattered Job Tracking
-  </h2>
-
-  <p className="mt-3 text-sm md:text-base text-gray-600 leading-relaxed max-w-4xl">
-    Students often manage internships and job applications across
-    spreadsheets, emails, and multiple platforms, making it difficult
-    to track progress, deadlines, interview stages, and career growth
-    in one organized system.
-  </p>
-</div>
 
       </div>
-
-    
-
     </section>
   );
 };

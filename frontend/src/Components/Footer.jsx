@@ -1,116 +1,68 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="w-full  px-6 md:px-12 pt-20 pb-10">
-
+    <footer className="w-full bg-white border-t border-zinc-100 px-6 md:px-10 pt-16 pb-10">
       <div className="max-w-7xl mx-auto">
 
-        {/* Top Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-12 border-b border-black/10 pb-14">
+        {/* Top */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 pb-12 border-b border-zinc-100">
 
           {/* Brand */}
           <div>
-
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h2 className="text-lg font-bold tracking-tight text-zinc-900">
               SkillGraph
-            </h1>
-
-            <p className="mt-5 text-sm md:text-base text-gray-600 leading-relaxed max-w-sm">
-              A graph-driven career optimization platform designed
-              to help learners build smarter roadmaps, track growth,
-              and unlock opportunities efficiently.
-            </p>
-
-          </div>
-
-    
-          {/* Resources */}
-          <div className="px-20">
-
-            <h2 className="text-lg font-semibold">
-                COMPANY
             </h2>
-
-            <div className="mt-5 flex flex-col gap-3 text-gray-600">
-
-              <a href="/about" className="hover:text-black transition">
-                About Us
-              </a>
-
-              <a href="/policy" className="hover:text-black transition">
-                Privacy Policy
-              </a>
-
-              <a href="/terms" className="hover:text-black transition">
-                Terms & Services
-              </a>
-
-              <a href="/support" className="hover:text-black transition">
-                Contact
-              </a>
-
-            </div>
-
+            <p className="mt-3 text-sm text-zinc-500 leading-relaxed max-w-xs">
+              A graph-driven platform for structured career learning — built on dependency analysis, skill gap detection, and adaptive roadmaps.
+            </p>
           </div>
 
-          {/* CTA */}
+          {/* Company */}
           <div>
+            <h3 className="text-xs font-semibold tracking-[0.15em] uppercase text-zinc-400 mb-5">
+              Company
+            </h3>
+            <div className="flex flex-col gap-3 text-sm text-zinc-500">
+              <Link to="/about" className="hover:text-zinc-900 transition-colors duration-200">About</Link>
+              <Link to="/guide" className="hover:text-zinc-900 transition-colors duration-200">Guide</Link>
+              <Link to="/support" className="hover:text-zinc-900 transition-colors duration-200">Support</Link>
+              <Link to="/policy" className="hover:text-zinc-900 transition-colors duration-200">Privacy Policy</Link>
+              <Link to="/terms" className="hover:text-zinc-900 transition-colors duration-200">Terms of Service</Link>
+            </div>
+          </div>
 
-            <h2 className="text-lg font-semibold leading-snug">
-              Start Building Smarter Career Paths
-            </h2>
-
-            <p className="mt-5 text-gray-600 text-sm leading-relaxed">
-              Join SkillGraph and experience adaptive career
-              progression powered by graph optimization.
-            </p>
-
-            <button
-              className="
-              mt-6
-              bg-black
-              text-white
-              px-5
-              py-3
-              rounded-full
-              font-medium
-              hover:bg-gray-800
-              transition-all
-              duration-300
-              "
-            >
-              Get Started
-            </button>
-
+          {/* Product */}
+          <div>
+            <h3 className="text-xs font-semibold tracking-[0.15em] uppercase text-zinc-400 mb-5">
+              Product
+            </h3>
+            <div className="flex flex-col gap-3 text-sm text-zinc-500">
+              <Link to="/dashboard" className="hover:text-zinc-900 transition-colors duration-200">Skill Roadmap</Link>
+              <Link to="/jobtracker/dashboard" className="hover:text-zinc-900 transition-colors duration-200">Job Tracker</Link>
+              <Link to="/signup" className="hover:text-zinc-900 transition-colors duration-200">Get Started — Free</Link>
+            </div>
           </div>
 
         </div>
 
         {/* Bottom */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8">
-
-          <p className="text-sm text-gray-500">
+          <p className="text-xs text-zinc-400">
             © 2026 SkillGraph. All rights reserved.
           </p>
-
-          <div className="flex items-center gap-6 text-sm text-gray-500">
-
-            <a href="#" className="hover:text-black transition">
-              Linkdin
+          <div className="flex items-center gap-6 text-xs text-zinc-400">
+            <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-zinc-700 transition-colors duration-200">
+              LinkedIn
             </a>
-
-            <a href="#" className="hover:text-black transition">
-              Github
+            <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-zinc-700 transition-colors duration-200">
+              GitHub
             </a>
-
-
           </div>
-
         </div>
 
       </div>
-
     </footer>
   );
 };

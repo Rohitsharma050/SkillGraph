@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 const About = () => {
   return (
-    <div className="bg-white min-h-screen py-15 px-6 md:pl-20">
+  <div className="bg-white min-h-screen py-15 px-6 md:pl-20">
 
       <div className="max-w-5xl">
 
@@ -13,7 +13,7 @@ const About = () => {
         <motion.div
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4 }}
-          className="flex items-center gap-2 py-10 text-[#aaa] hover:text-[#1a1a1a] transition"
+          className="flex items-center gap-2 py-10 text-zinc-400 hover:text-zinc-800 transition"
         >
           <ArrowLeft className="h-4 w-4" />
 
@@ -23,15 +23,15 @@ const About = () => {
         </motion.div>
 
         {/* Heading */}
-        <h1 className="text-2xl md:text-3xl font-semibold text-[#1a1a1a]">
+        <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900">
           About SkillGraph
         </h1>
 
-        <p className="text-[#aaa] mt-3">
+        <p className="text-zinc-400 mt-3">
           Last Updated: March 2026
         </p>
 
-        <div className="h-px w-full bg-[#e8e3dc] mt-10 mb-14" />
+        <div className="h-px w-full bg-zinc-200 mt-10 mb-14" />
 
         {/* Sections */}
         {[
@@ -119,11 +119,11 @@ const About = () => {
 
           <div key={i} className="mb-14">
 
-            <h2 className="text-2xl font-semibold text-[#1a1a1a] mb-5">
+            <h2 className="text-2xl font-semibold text-zinc-900 mb-5">
               {section.title}
             </h2>
 
-            <p className="text-[#777] leading-[1.9] text-[15px] md:text-base">
+            <p className="text-zinc-500 leading-[1.9] text-[15px] md:text-base">
               {section.content}
             </p>
 
@@ -132,22 +132,22 @@ const About = () => {
         ))}
 
         {/* Contact */}
-        <h2 className="text-2xl font-semibold text-[#1a1a1a] mb-4">
+        <h2 className="text-2xl font-semibold text-zinc-900 mb-4">
           14. Contact
         </h2>
 
-        <p className="text-[#777] leading-relaxed">
+        <p className="text-zinc-500 leading-relaxed">
           Have questions, suggestions, or feedback regarding SkillGraph?
           We would love to hear from you.
         </p>
 
-        <div className="mt-8 inline-block rounded-2xl border border-[#e8e3dc] bg-[#faf7f2] px-6 py-5">
+        <div className="mt-8 inline-block rounded-2xl border border-zinc-200 bg-zinc-50 px-6 py-5">
 
           <p className="text-[#1a1a1a] text-sm leading-relaxed">
             SkillGraph Support
             <br />
 
-            <span className="text-[#aaa]">
+            <span className="text-zinc-400">
               support@skillgraph.dev
             </span>
 
