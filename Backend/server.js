@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import cors from "cors";
 import connectDb from "./Config/db.js";
 import { userRouter } from "./Routes/UserRouter.js";
+import { roadmapRouter } from "./Routes/RoadmapRouter.js";
+import { resourceRouter } from "./Routes/ResourceRouter.js";
 import dns from "dns";
 const result = dotenv.config({ path: "./.env" });
  dns.setServers(["1.1.1.1", "8.8.8.8"]);
@@ -19,6 +21,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/user", userRouter);
+app.use("/api/roadmaps", roadmapRouter);
+app.use("/api/resources", resourceRouter);
 
 const PORT = process.env.PORT || 5000;
 

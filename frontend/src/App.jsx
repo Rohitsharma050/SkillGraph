@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import RoadmapPage from './SkillGraph/RoadmapPage'
+import Resources from './SkillGraph/Resources'
 
 import './App.css'
 import { Navbar } from './Components/Navbar'
@@ -32,6 +34,8 @@ function App() {
         <Route path='/guide' element = {<Steps/>}/>
         <Route path='/jobtracker/dashboard' element = {<JobDashboard/>}/>
         <Route path='/profile' element = {<Profile/>}/>
+        <Route path='/roadmap/:roadmapId' element={<RoadmapPage/>}/>
+        <Route path='/resources' element={<Resources/>}/>
       </Routes>
 
       

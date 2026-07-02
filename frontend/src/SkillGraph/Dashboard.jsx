@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../Context/AppContext";
 import DashboardNavbar from "../Components/DashboardNavbar";
+import RoadmapHistory from "../Components/RoadmapHistory";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const ROLE_OPTIONS = [
@@ -40,6 +41,9 @@ const Dashboard = () => {
 
   // Generating state
   const [generating, setGenerating] = useState(false);
+
+  // Error state
+  const [generateError, setGenerateError] = useState("");
 
   // ── Fetch user profile ────────────────────────────────────────────────────
   useEffect(() => {
@@ -83,15 +87,21 @@ const Dashboard = () => {
 
   // ── Roadmap generation handler ────────────────────────────────────────────
   const handleGenerateRoadmap = async () => {
-    if (!activeRole) return;
-    if (!resumeReady) return;
+    if (!activeRole || !resumeReady) return;
+    setGenerateError("");
 
+    // Build FormData so we can attach either a file or a URL
     const formData = new FormData();
-    formData.append("role", activeRole);
-    formData.append("resumeSource", resumeSource);
+    formData.append("targetRole", activeRole);
     formData.append("updateProfile", updateProfile);
 
+    // Pass user's profile skills so backend can credit existing knowledge
+    if (user?.skills?.length > 0) {
+      formData.append("extractedSkills", JSON.stringify(user.skills));
+    }
+
     if (resumeSource === "profile" && hasResumeInProfile) {
+      // Tell backend to reuse the resume URL already stored in the profile
       formData.append("resumeUrl", user.resumeUrl);
     } else if (resumeSource === "upload" && resumeFile) {
       formData.append("resume", resumeFile);
@@ -100,23 +110,32 @@ const Dashboard = () => {
     try {
       setGenerating(true);
 
-      // TODO: Replace with actual POST /api/roadmaps/generate
-      // const { data } = await axios.post(
-      //   `${backendUrl}/api/roadmaps/generate`,
-      //   formData,
-      //   { headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" } }
-      // );
-      // if (data.success) navigate(`/roadmap/${data.roadmapId}`);
+      const { data } = await axios.post(
+        `${backendUrl}/api/roadmaps/generate`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-      // Placeholder: simulate network delay
-      await new Promise((r) => setTimeout(r, 1500));
-      alert("Roadmap generation coming soon! API not connected yet.");
+      if (data.success) {
+        navigate(`/roadmap/${data.roadmapId}`);
+      } else {
+        setGenerateError(data.message || "Generation failed. Please try again.");
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Generate roadmap error:", err);
+      setGenerateError(
+        err?.response?.data?.message || "Something went wrong. Please try again."
+      );
     } finally {
       setGenerating(false);
     }
   };
+
 
   // ─── Loading ───────────────────────────────────────────────────────────────
   if (loadingUser) {
@@ -427,25 +446,18 @@ const Dashboard = () => {
                 "Generate Roadmap"
               )}
             </button>
+
+            {/* ── Inline error ─────────────────────────────────────────────── */}
+            {generateError && (
+              <p className="text-xs text-red-500 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                {generateError}
+              </p>
+            )}
           </div>
 
-          {/* ── 4. Previous Roadmaps (placeholder) ────────────────────────── */}
-          <div className="bg-white border border-black/10 rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-black">
-                Previous Roadmaps
-              </h2>
-              <span className="text-xs text-zinc-400">0 roadmaps</span>
-            </div>
-            <div className="py-8 text-center">
-              <p className="text-sm text-zinc-400">
-                No roadmaps generated yet.
-              </p>
-              <p className="text-xs text-zinc-300 mt-1">
-                Your roadmaps will appear here once generated.
-              </p>
-            </div>
-          </div>
+
+          {/* ── 4. Roadmap History ─────────────────────────────────────── */}
+          <RoadmapHistory limit={3} showHeader={true} />
 
         </div>
       </main>
