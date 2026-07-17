@@ -5,9 +5,7 @@ import { AppContext } from "../Context/AppContext";
 import DashboardNavbar from "../Components/DashboardNavbar";
 import RoadmapHistory from "../Components/RoadmapHistory";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// STATUS HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
+
 const statusMeta = {
   completed: {
     label: "Completed",
@@ -32,9 +30,7 @@ const statusMeta = {
   },
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SUB-COMPONENT: RoadmapNode
-// ─────────────────────────────────────────────────────────────────────────────
+
 const RoadmapNode = ({ node, onMarkComplete, marking, onViewResources }) => {
   const meta = statusMeta[node.status] || statusMeta.available;
   const isMarkable = node.status === "available";
