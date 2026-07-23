@@ -182,6 +182,8 @@ const RoadmapPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [marking, setMarking] = useState(null); // nodeId being marked
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenMsg, setRegenMsg] = useState("");
 
   // ── Fetch roadmap ─────────────────────────────────────────────────────────
   const fetchRoadmap = useCallback(async () => {
@@ -271,6 +273,32 @@ const RoadmapPage = () => {
   // ── Navigate to resources page for a skill ───────────────────────────────
   const handleViewResources = (skillLabel) => {
     navigate(`/resources?skill=${encodeURIComponent(skillLabel)}`);
+  };
+
+  // ── Regenerate roadmap (adaptive re-prioritisation) ───────────────────────
+  const handleRegenerate = async () => {
+    if (!roadmap || regenerating) return;
+    setRegenerating(true);
+    setRegenMsg("");
+    try {
+      const { data } = await axios.post(
+        `${backendUrl}/api/roadmaps/${roadmapId}/regenerate`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (data.success) {
+        setRoadmap(data.roadmap);
+        setRegenMsg("✓ Roadmap re-prioritised!");
+        setTimeout(() => setRegenMsg(""), 3000);
+      } else {
+        setRegenMsg(data.message || "Regeneration failed.");
+      }
+    } catch (err) {
+      console.error("Regenerate error:", err);
+      setRegenMsg("Failed to regenerate. Please try again.");
+    } finally {
+      setRegenerating(false);
+    }
   };
 
   // ── Derived data ──────────────────────────────────────────────────────────
@@ -643,13 +671,43 @@ const RoadmapPage = () => {
                   >
                     ← Back to Dashboard
                   </button>
-                  {/* TODO (Step 6): implement Resources page */}
                   <button
                     onClick={() => navigate("/resources")}
                     className="w-full text-left px-4 py-3 rounded-xl border border-black/10 text-sm font-medium text-black hover:bg-zinc-50 hover:border-black/20 transition"
                   >
                     📚 View Resources
                   </button>
+
+                  {/* Regenerate Roadmap */}
+                  <button
+                    id="btn-regenerate-roadmap"
+                    onClick={handleRegenerate}
+                    disabled={regenerating}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-black text-sm font-semibold text-white bg-black hover:bg-zinc-800 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {regenerating ? (
+                      <>
+                        <span className="inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Re-prioritising…
+                      </>
+                    ) : (
+                      "🔄 Regenerate Roadmap"
+                    )}
+                  </button>
+
+                  {/* Feedback message */}
+                  {regenMsg && (
+                    <p
+                      className={`text-xs font-medium text-center px-2 py-1.5 rounded-lg ${
+                        regenMsg.startsWith("✓")
+                          ? "bg-emerald-50 text-emerald-700"
+                          : "bg-red-50 text-red-600"
+                      }`}
+                    >
+                      {regenMsg}
+                    </p>
+                  )}
+
                   <button
                     onClick={() => navigate("/dashboard")}
                     className="w-full text-left px-4 py-3 rounded-xl border border-black/10 text-sm font-medium text-black hover:bg-zinc-50 hover:border-black/20 transition"

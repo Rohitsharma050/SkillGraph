@@ -2,6 +2,7 @@ import roadmapModel from "../Models/roadmapModel.js";
 import userModel from "../Models/userModel.js";
 import { getTemplate, getSupportedRoles } from "../Utils/roadmapTemplates.js";
 import { uploadToCloudinary } from "../Config/Cloudinary.js";
+import { priorityScheduledTopoSort } from "../Utils/skillAttributes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper: normalise a skill string for comparison (lowercase, trimmed)
@@ -61,15 +62,20 @@ const buildRoadmapFromTemplate = (template, userSkillsNorm, targetRole) => {
         };
     });
 
-    // Build learningSteps (only missing skills, ordered by level then template order)
+    // Build learningSteps (only missing skills).
+    // Uses priority-weighted topological sort (Kahn's algorithm variant) so that
+    // high-demand, high-unlock-factor skills appear earlier in the learning sequence.
     const missingSkills = skills.filter((s) => !completedIds.has(s.id));
-    const sortedMissing = [...missingSkills].sort((a, b) => a.level - b.level);
+    const orderedIds = priorityScheduledTopoSort(missingSkills, edges, targetRole);
+    const sortedMissing = orderedIds
+        .map((id) => missingSkills.find((s) => s.id === id))
+        .filter(Boolean);
     const learningSteps = sortedMissing.map((s, i) => ({
         order: i + 1,
         skill: s.label,
         reason: s.reason,
         estimatedTime: s.estimatedTime,
-        resources: [], // TODO: populate in Step 6 with curated resource links
+        resources: [], // TODO: populate with curated resource links
     }));
 
     // Existing and missing skill labels for the explanation
@@ -411,6 +417,117 @@ export const updateRoadmapProgress = async (req, res) => {
         });
     } catch (error) {
         console.error("updateRoadmapProgress error:", error.message);
+        return res
+            .status(500)
+            .json({ success: false, message: error.message });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/roadmaps/:id/regenerate
+//
+// Re-generates the roadmap for a user after they have marked skills complete.
+// Unlike /generate (which creates a new roadmap document), this endpoint
+// updates the *existing* roadmap in-place so the URL and _id remain stable.
+//
+// Steps:
+//   1. Load the existing roadmap (ownership-checked)
+//   2. Treat completedNodes labels as the user's "current skills"
+//   3. Re-run buildRoadmapFromTemplate with the updated skill set
+//      (this uses the priority-weighted topo sort automatically)
+//   4. Persist and return the refreshed roadmap
+// ─────────────────────────────────────────────────────────────────────────────
+export const regenerateRoadmap = async (req, res) => {
+    try {
+        const userId = req.userId;
+        if (!userId) {
+            return res
+                .status(401)
+                .json({ success: false, message: "Unauthorized: Please log in." });
+        }
+
+        // ── 1. Load roadmap ────────────────────────────────────────────────
+        const roadmap = await roadmapModel.findOne({
+            _id: req.params.id,
+            userId,
+        });
+
+        if (!roadmap) {
+            return res
+                .status(404)
+                .json({ success: false, message: "Roadmap not found." });
+        }
+
+        // ── 2. Load template for this role ─────────────────────────────────
+        const template = getTemplate(roadmap.targetRole);
+        if (!template) {
+            return res.status(400).json({
+                success: false,
+                message: `Template not found for role "${roadmap.targetRole}".`,
+            });
+        }
+
+        // ── 3. Build "current skill set" from completedNodes ───────────────
+        // Map completedNode IDs → labels so they match the norm() comparison
+        const completedIdSet = new Set(roadmap.completedNodes);
+        const completedLabels = roadmap.nodes
+            .filter((n) => completedIdSet.has(n.id))
+            .map((n) => n.label);
+
+        // Merge with the roadmap's originally extracted skills so the user
+        // keeps credit for skills they had before any progress was marked.
+        const currentSkillsNorm = [
+            ...new Set([
+                ...roadmap.extractedSkills.map(norm),
+                ...completedLabels.map(norm),
+            ]),
+        ];
+
+        // ── 4. Re-build roadmap using priority-weighted sort ───────────────
+        const {
+            nodes,
+            edges,
+            learningSteps,
+            missingSkills,
+            explanation,
+            completedNodes: newCompletedNodes,
+            progressPercentage,
+        } = buildRoadmapFromTemplate(template, currentSkillsNorm, roadmap.targetRole);
+
+        // ── 5. Update the existing document in-place ───────────────────────
+        roadmap.nodes             = nodes;
+        roadmap.edges             = edges;
+        roadmap.learningSteps     = learningSteps;
+        roadmap.missingSkills     = missingSkills;
+        roadmap.explanation       = explanation;
+        roadmap.completedNodes    = newCompletedNodes;
+        roadmap.progressPercentage = progressPercentage;
+
+        await roadmap.save();
+
+        // ── 6. Respond ─────────────────────────────────────────────────────
+        return res.json({
+            success: true,
+            message: "Roadmap regenerated with updated priority ordering.",
+            roadmap: {
+                _id: roadmap._id,
+                targetRole: roadmap.targetRole,
+                title: roadmap.title,
+                resumeUrl: roadmap.resumeUrl,
+                extractedSkills: roadmap.extractedSkills,
+                missingSkills: roadmap.missingSkills,
+                nodes: roadmap.nodes,
+                edges: roadmap.edges,
+                learningSteps: roadmap.learningSteps,
+                explanation: roadmap.explanation,
+                completedNodes: roadmap.completedNodes,
+                progressPercentage: roadmap.progressPercentage,
+                createdAt: roadmap.createdAt,
+                updatedAt: roadmap.updatedAt,
+            },
+        });
+    } catch (error) {
+        console.error("regenerateRoadmap error:", error.message);
         return res
             .status(500)
             .json({ success: false, message: error.message });
