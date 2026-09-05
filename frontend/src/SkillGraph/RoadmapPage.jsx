@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { AppContext } from "../Context/AppContext";
 import DashboardNavbar from "../Components/DashboardNavbar";
 import RoadmapHistory from "../Components/RoadmapHistory";
+import GraphRoadmap from "./components/GraphRoadmap.jsx";
 
 
 const statusMeta = {
@@ -184,6 +185,8 @@ const RoadmapPage = () => {
   const [marking, setMarking] = useState(null); // nodeId being marked
   const [regenerating, setRegenerating] = useState(false);
   const [regenMsg, setRegenMsg] = useState("");
+  // "graph" = React Flow DAG view (default), "list" = existing level-grid view
+  const [viewMode, setViewMode] = useState("graph");
 
   // ── Fetch roadmap ─────────────────────────────────────────────────────────
   const fetchRoadmap = useCallback(async () => {
@@ -443,81 +446,123 @@ const RoadmapPage = () => {
             {/* ══ LEFT / MAIN COLUMN ════════════════════════════════════════ */}
             <div className="space-y-6">
 
-              {/* ── ROADMAP GRAPH ──────────────────────────────────────────── */}
+              {/* ── ROADMAP VISUALIZATION ───────────────────────────────────── */}
               <div className="bg-white border border-black/10 rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-5">
+                {/* Header row with view toggle */}
+                <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
                   <div>
                     <h2 className="text-base font-bold text-black">
                       Skill Roadmap
                     </h2>
                     <p className="text-xs text-zinc-400 mt-0.5">
-                      Skills are ordered by prerequisite level. Complete each
-                      layer before advancing.
+                      {viewMode === "graph"
+                        ? "Interactive graph — hover a node to see learning resources."
+                        : "Skills ordered by prerequisite level. Complete each layer before advancing."}
                     </p>
                   </div>
-                  {/* Legend */}
-                  <div className="hidden sm:flex items-center gap-3 text-[10px] text-zinc-500 font-medium">
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      Done
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-black" />
-                      Available
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-zinc-300" />
-                      Locked
-                    </span>
+
+                  {/* View Toggle */}
+                  <div className="flex items-center gap-1 p-0.5 rounded-xl bg-zinc-100 border border-zinc-200">
+                    <button
+                      onClick={() => setViewMode("graph")}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200
+                        ${viewMode === "graph"
+                          ? "bg-white text-black shadow-sm border border-black/10"
+                          : "text-zinc-500 hover:text-zinc-700"}`}
+                    >
+                      🕸 Graph
+                    </button>
+                    <button
+                      onClick={() => setViewMode("list")}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200
+                        ${viewMode === "list"
+                          ? "bg-white text-black shadow-sm border border-black/10"
+                          : "text-zinc-500 hover:text-zinc-700"}`}
+                    >
+                      ☰ List
+                    </button>
                   </div>
                 </div>
 
-                {/* Levels */}
-                <div className="space-y-0">
-                  {levels.map((level, levelIdx) => (
-                    <div key={level}>
-                      {/* Level label + connector line */}
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="shrink-0 text-[10px] font-bold text-zinc-300 uppercase tracking-widest w-14 text-right">
-                          Level {level}
-                        </span>
-                        <div className="flex-1 h-px bg-zinc-100" />
-                      </div>
+                {/* ── Graph View (React Flow DAG) ─────────────────────────── */}
+                {viewMode === "graph" && (
+                  <GraphRoadmap
+                    roadmapNodes={roadmap.nodes}
+                    roadmapEdges={roadmap.edges}
+                    onMarkComplete={handleMarkComplete}
+                    marking={marking}
+                    backendUrl={backendUrl}
+                    token={token}
+                  />
+                )}
 
-                      {/* Nodes row */}
-                      <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-2 pl-[72px]">
-                        {nodesByLevel[level].map((node) => (
-                          <RoadmapNode
-                            key={node.id}
-                            node={node}
-                            onMarkComplete={handleMarkComplete}
-                            onViewResources={handleViewResources}
-                            marking={marking}
-                          />
-                        ))}
-                      </div>
-
-                      {/* Vertical connector between levels */}
-                      {levelIdx < levels.length - 1 && (
-                        <div className="flex items-center gap-3 my-1">
-                          <div className="w-14" />
-                          <div className="ml-4 flex flex-col items-center">
-                            <div className="w-px h-6 bg-zinc-200" />
-                            <svg
-                              className="text-zinc-300 -mt-px"
-                              width="10"
-                              height="6"
-                              viewBox="0 0 10 6"
-                              fill="currentColor"
-                            >
-                              <path d="M5 6L0 0h10L5 6z" />
-                            </svg>
-                          </div>
-                        </div>
-                      )}
+                {/* ── List View (existing level-grid) ────────────────────── */}
+                {viewMode === "list" && (
+                  <>
+                    {/* Legend */}
+                    <div className="hidden sm:flex items-center gap-3 text-[10px] text-zinc-500 font-medium mb-5">
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                        Done
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-black" />
+                        Available
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-zinc-300" />
+                        Locked
+                      </span>
                     </div>
-                  ))}
-                </div>
+
+                    {/* Levels */}
+                    <div className="space-y-0">
+                      {levels.map((level, levelIdx) => (
+                        <div key={level}>
+                          {/* Level label + connector line */}
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className="shrink-0 text-[10px] font-bold text-zinc-300 uppercase tracking-widest w-14 text-right">
+                              Level {level}
+                            </span>
+                            <div className="flex-1 h-px bg-zinc-100" />
+                          </div>
+
+                          {/* Nodes row */}
+                          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-2 pl-[72px]">
+                            {nodesByLevel[level].map((node) => (
+                              <RoadmapNode
+                                key={node.id}
+                                node={node}
+                                onMarkComplete={handleMarkComplete}
+                                onViewResources={handleViewResources}
+                                marking={marking}
+                              />
+                            ))}
+                          </div>
+
+                          {/* Vertical connector between levels */}
+                          {levelIdx < levels.length - 1 && (
+                            <div className="flex items-center gap-3 my-1">
+                              <div className="w-14" />
+                              <div className="ml-4 flex flex-col items-center">
+                                <div className="w-px h-6 bg-zinc-200" />
+                                <svg
+                                  className="text-zinc-300 -mt-px"
+                                  width="10"
+                                  height="6"
+                                  viewBox="0 0 10 6"
+                                  fill="currentColor"
+                                >
+                                  <path d="M5 6L0 0h10L5 6z" />
+                                </svg>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* ── EXPLANATION CARD ───────────────────────────────────────── */}

@@ -3,6 +3,7 @@ import userModel from "../Models/userModel.js";
 import { getTemplate, getSupportedRoles } from "../Utils/roadmapTemplates.js";
 import { uploadToCloudinary } from "../Config/Cloudinary.js";
 import { priorityScheduledTopoSort } from "../Utils/skillAttributes.js";
+import { parseResumeAndExtractSkills } from "../Utils/resumeParser.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper: normalise a skill string for comparison (lowercase, trimmed)
@@ -171,7 +172,7 @@ export const generateRoadmap = async (req, res) => {
             req.body.updateProfile === true ||
             req.body.updateProfile === "true";
 
-        // ── 3. Resume handling ─────────────────────────────────────────────
+        // ── 3. Resume handling + auto skill extraction ────────────────────
         let finalResumeUrl = (req.body.resumeUrl || user.resumeUrl || "").trim();
 
         if (req.file) {
@@ -182,9 +183,28 @@ export const generateRoadmap = async (req, res) => {
                 public_id: `resume_${userId}_${Date.now()}`,
             });
             finalResumeUrl = cloudResult.secure_url;
+        }
 
-            // TODO (Step 6): pipe cloudResult.secure_url through resume-parser
-            //   to extract skills from the PDF and merge into allUserSkills.
+        // ── 3a. Parse resume and extract skills (Feature: Resume AI Parsing) ─
+        // parseResumeAndExtractSkills NEVER throws — returns [] on any error,
+        // so roadmap generation is always safe regardless of resume state.
+        if (finalResumeUrl) {
+            const resumeExtractedSkills = await parseResumeAndExtractSkills(finalResumeUrl);
+
+            if (resumeExtractedSkills.length > 0) {
+                console.log(`[RoadmapController] Resume yielded ${resumeExtractedSkills.length} additional skills.`);
+
+                // Merge resume skills into the existing allUserSkills array (dedup)
+                const mergedSet = new Set([
+                    ...allUserSkills.map((s) => s.trim().toLowerCase()),
+                ]);
+                for (const skill of resumeExtractedSkills) {
+                    if (!mergedSet.has(skill.trim().toLowerCase())) {
+                        allUserSkills.push(skill);
+                        mergedSet.add(skill.trim().toLowerCase());
+                    }
+                }
+            }
         }
 
         // ── 4. Load template ───────────────────────────────────────────────
