@@ -4,6 +4,7 @@ import { getTemplate, getSupportedRoles } from "../Utils/roadmapTemplates.js";
 import { uploadToCloudinary } from "../Config/Cloudinary.js";
 import { priorityScheduledTopoSort } from "../Utils/skillAttributes.js";
 import { parseResumeAndExtractSkills } from "../Utils/resumeParser.js";
+import { generateJSONFromGemini } from "../Services/geminiService.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper: normalise a skill string for comparison (lowercase, trimmed)
@@ -515,13 +516,16 @@ export const regenerateRoadmap = async (req, res) => {
         } = buildRoadmapFromTemplate(template, currentSkillsNorm, roadmap.targetRole);
 
         // ── 5. Update the existing document in-place ───────────────────────
-        roadmap.nodes             = nodes;
-        roadmap.edges             = edges;
-        roadmap.learningSteps     = learningSteps;
-        roadmap.missingSkills     = missingSkills;
-        roadmap.explanation       = explanation;
-        roadmap.completedNodes    = newCompletedNodes;
+        roadmap.nodes              = nodes;
+        roadmap.edges              = edges;
+        roadmap.learningSteps      = learningSteps;
+        roadmap.missingSkills      = missingSkills;
+        roadmap.explanation        = explanation;
+        roadmap.completedNodes     = newCompletedNodes;
         roadmap.progressPercentage = progressPercentage;
+        // Invalidate any cached AI documentation — the roadmap's skill set
+        // and ordering have changed, so stale docs must not be served.
+        roadmap.documentation      = { content: null, generatedAt: null };
 
         await roadmap.save();
 
@@ -548,6 +552,193 @@ export const regenerateRoadmap = async (req, res) => {
         });
     } catch (error) {
         console.error("regenerateRoadmap error:", error.message);
+        return res
+            .status(500)
+            .json({ success: false, message: error.message });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/roadmaps/:id/documentation
+//
+// Generates (or returns cached) AI documentation for a roadmap.
+//
+// Cache logic:
+//   • If documentation.content is non-null AND query ?force=true is NOT set,
+//     return the cached content immediately — no Gemini call.
+//   • Invalidation is EXPLICIT only: regenerateRoadmap nulls documentation.
+//     We do NOT compare timestamps — saving docs itself bumps updatedAt,
+//     which would create a permanently self-invalidating cache.
+//
+// Early-return cases:
+//   • All skills already completed (empty learningSteps) → skip Gemini,
+//     return a friendly "nothing left to document" response.
+//
+// Persistence:
+//   • roadmap.markModified("documentation") is required before .save()
+//     because Schema.Types.Mixed fields are not auto-detected by Mongoose.
+// ─────────────────────────────────────────────────────────────────────────────
+export const generateDocumentation = async (req, res) => {
+    try {
+        const userId = req.userId;
+        if (!userId) {
+            return res
+                .status(401)
+                .json({ success: false, message: "Unauthorized: Please log in." });
+        }
+
+        // ── 1. Load roadmap (ownership check) ─────────────────────────────
+        const roadmap = await roadmapModel.findOne({
+            _id: req.params.id,
+            userId,
+        });
+
+        if (!roadmap) {
+            return res
+                .status(404)
+                .json({ success: false, message: "Roadmap not found." });
+        }
+
+        const force = req.query.force === "true";
+
+        // ── 2. Return cached documentation if available ────────────────────
+        // Cache is valid whenever content is non-null and force is not set.
+        // No timestamp comparison — explicit null-out on regenerate is the
+        // only invalidation path.
+        if (!force && roadmap.documentation?.content != null) {
+            console.log(`[generateDocumentation] Returning cached docs for roadmap ${roadmap._id}`);
+            return res.json({
+                success: true,
+                cached: true,
+                documentation: {
+                    content: roadmap.documentation.content,
+                    generatedAt: roadmap.documentation.generatedAt,
+                },
+            });
+        }
+
+        // ── 3. Early return if no skills need documenting ──────────────────
+        // learningSteps contains only skills the user still needs to learn.
+        // If empty, the user has completed everything — nothing to document.
+        if (!roadmap.learningSteps || roadmap.learningSteps.length === 0) {
+            return res.json({
+                success: true,
+                cached: false,
+                allComplete: true,
+                documentation: { content: null, generatedAt: null },
+                message: "No skills left to document — you've completed this roadmap!",
+            });
+        }
+
+        // ── 4. Build the grounded prompt ───────────────────────────────────
+        // Ordered skill list with reason + estimated time (from learningSteps)
+        const orderedSkillsText = roadmap.learningSteps
+            .map(
+                (s) =>
+                    `  ${s.order}. ${s.skill}` +
+                    (s.estimatedTime ? ` (~${s.estimatedTime})` : "") +
+                    (s.reason ? ` — ${s.reason}` : "")
+            )
+            .join("\n");
+
+        // Prerequisite edges (from → to)
+        const prereqEdges = roadmap.edges.filter((e) => e.relation === "prerequisite");
+        const edgesText =
+            prereqEdges.length > 0
+                ? prereqEdges.map((e) => `  ${e.from} → ${e.to}`).join("\n")
+                : "  (none — skills can be learned in any order)";
+
+        const prompt = `You are a technical documentation writer for a learning roadmap.
+Return ONLY a valid JSON object — no markdown, no code fences, no prose outside the JSON.
+
+Roadmap context:
+  Target role: ${roadmap.targetRole}
+  Ordered skills to learn (highest priority first):
+${orderedSkillsText}
+
+  Prerequisite edges (skill IDs — "from" must be learned before "to"):
+${edgesText}
+
+Rules:
+  - Document ONLY the skills listed above — do NOT invent or add new skills.
+  - "roleOverview" should explain in 2-3 sentences why this skill set fits the target role.
+  - "whyThisOrder" must reference actual prerequisites and priority rationale shown above, not generic filler.
+  - "howToLearn" should be a concrete short study sequence (e.g., official docs → course → small project).
+  - "howToPractice" must be a SPECIFIC project idea, exercise type, or platform — not vague advice like "build projects".
+  - "estimatedTimeToLearn" should echo or refine the estimate given above.
+  - "finalMilestoneProject" should be a capstone idea that exercises most or all of the listed skills together.
+
+Required output format (strict JSON, no deviations):
+{
+  "roleOverview": "...",
+  "whyThisOrder": "...",
+  "skills": [
+    {
+      "skillName": "...",
+      "whyItMatters": "...",
+      "howToLearn": "...",
+      "howToPractice": "...",
+      "estimatedTimeToLearn": "..."
+    }
+  ],
+  "finalMilestoneProject": "..."
+}`;
+
+        // ── 5. Call Gemini ─────────────────────────────────────────────────
+        console.log(`[generateDocumentation] Calling Gemini for roadmap ${roadmap._id} (${roadmap.targetRole})`);
+        let parsed;
+        try {
+            parsed = await generateJSONFromGemini(prompt);
+        } catch (geminiErr) {
+            console.error("[generateDocumentation] Gemini call failed:", geminiErr.message);
+            return res.status(500).json({
+                success: false,
+                message: `AI documentation generation failed: ${geminiErr.message}`,
+            });
+        }
+
+        // ── 6. Validate required keys ──────────────────────────────────────
+        const requiredKeys = ["roleOverview", "whyThisOrder", "skills", "finalMilestoneProject"];
+        const missingKeys = requiredKeys.filter((k) => !(k in parsed));
+        if (missingKeys.length > 0) {
+            console.error("[generateDocumentation] Gemini response missing keys:", missingKeys);
+            return res.status(500).json({
+                success: false,
+                message: `AI response was incomplete (missing: ${missingKeys.join(", ")}). Please try again.`,
+            });
+        }
+
+        if (!Array.isArray(parsed.skills) || parsed.skills.length === 0) {
+            return res.status(500).json({
+                success: false,
+                message: "AI response contained an empty skills array. Please try again.",
+            });
+        }
+
+        // ── 7. Persist + return ────────────────────────────────────────────
+        // markModified is required for Schema.Types.Mixed — Mongoose won't
+        // auto-detect deep mutations on Mixed fields and the write silently
+        // no-ops without this call.
+        roadmap.documentation = {
+            content: parsed,
+            generatedAt: new Date(),
+        };
+        roadmap.markModified("documentation");
+        await roadmap.save();
+
+        console.log(`[generateDocumentation] ✓ Documentation saved for roadmap ${roadmap._id}`);
+
+        return res.json({
+            success: true,
+            cached: false,
+            documentation: {
+                content: roadmap.documentation.content,
+                generatedAt: roadmap.documentation.generatedAt,
+            },
+        });
+
+    } catch (error) {
+        console.error("generateDocumentation error:", error.message);
         return res
             .status(500)
             .json({ success: false, message: error.message });

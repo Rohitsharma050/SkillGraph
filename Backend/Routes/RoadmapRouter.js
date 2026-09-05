@@ -6,6 +6,7 @@ import {
     getRoadmapById,
     updateRoadmapProgress,
     regenerateRoadmap,
+    generateDocumentation,
 } from "../Controllers/RoadmapController.js";
 import authMiddleware from "../Middleware/authMiddleware.js";
 
@@ -30,3 +31,4 @@ roadmapRouter.get("/", authMiddleware, getUserRoadmaps);
 roadmapRouter.get("/:id", authMiddleware, getRoadmapById);
 roadmapRouter.patch("/:id/progress", authMiddleware, updateRoadmapProgress);
 roadmapRouter.post("/:id/regenerate", authMiddleware, regenerateRoadmap);
+roadmapRouter.post("/:id/documentation", authMiddleware, generateDocumentation);

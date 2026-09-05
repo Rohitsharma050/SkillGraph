@@ -95,6 +95,15 @@ const roadmapSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        // AI-generated documentation for this roadmap.
+        // content is Schema.Types.Mixed (structured JSON from Gemini).
+        // Nullable — existing roadmaps without it are unaffected.
+        // generatedAt records when the doc was last produced.
+        // Invalidated (set to null) whenever the roadmap is regenerated.
+        documentation: {
+            content: { type: mongoose.Schema.Types.Mixed, default: null },
+            generatedAt: { type: Date, default: null },
+        },
     },
     { timestamps: true }
 );

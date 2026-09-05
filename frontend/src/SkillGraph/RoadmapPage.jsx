@@ -5,6 +5,8 @@ import { AppContext } from "../Context/AppContext";
 import DashboardNavbar from "../Components/DashboardNavbar";
 import RoadmapHistory from "../Components/RoadmapHistory";
 import GraphRoadmap from "./components/GraphRoadmap.jsx";
+import RoadmapDocumentation from "./components/RoadmapDocumentation.jsx";
+import { FileText } from "lucide-react";
 
 
 const statusMeta = {
@@ -457,7 +459,9 @@ const RoadmapPage = () => {
                     <p className="text-xs text-zinc-400 mt-0.5">
                       {viewMode === "graph"
                         ? "Interactive graph — hover a node to see learning resources."
-                        : "Skills ordered by prerequisite level. Complete each layer before advancing."}
+                        : viewMode === "list"
+                        ? "Skills ordered by prerequisite level. Complete each layer before advancing."
+                        : "AI-generated guide explaining each skill, learning sequence, and a capstone project."}
                     </p>
                   </div>
 
@@ -480,6 +484,16 @@ const RoadmapPage = () => {
                           : "text-zinc-500 hover:text-zinc-700"}`}
                     >
                       ☰ List
+                    </button>
+                    <button
+                      id="btn-view-docs"
+                      onClick={() => setViewMode("docs")}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200
+                        ${viewMode === "docs"
+                          ? "bg-white text-black shadow-sm border border-black/10"
+                          : "text-zinc-500 hover:text-zinc-700"}`}
+                    >
+                      <FileText size={12} /> Docs
                     </button>
                   </div>
                 </div>
@@ -562,6 +576,14 @@ const RoadmapPage = () => {
                       ))}
                     </div>
                   </>
+                )}
+                {/* ── Docs View (AI-generated documentation) ───────────────── */}
+                {viewMode === "docs" && (
+                  <RoadmapDocumentation
+                    roadmapId={roadmapId}
+                    token={token}
+                    backendUrl={backendUrl}
+                  />
                 )}
               </div>
 

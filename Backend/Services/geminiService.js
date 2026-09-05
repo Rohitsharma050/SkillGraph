@@ -5,7 +5,8 @@
 // Reads GEMINI_API_KEY from environment variables.
 //
 // Public API:
-//   extractSkillsWithGemini(resumeText) → Promise<string[]>
+//   generateJSONFromGemini(prompt)       → Promise<any>   — raw parsed JSON
+//   extractSkillsWithGemini(resumeText)  → Promise<string[]>
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -28,27 +29,6 @@ function getClient() {
     return genAI;
 }
 
-/**
- * ATS extraction prompt — instructs Gemini to return ONLY a JSON object.
- * Using a strict format avoids any markdown fences or prose in the response.
- */
-const buildPrompt = (resumeText) => `You are an ATS (Applicant Tracking System) skill extraction engine.
-
-Your task is to extract ONLY technical skills from the provided resume text.
-
-Rules:
-- Include programming languages, frameworks, libraries, tools, databases, platforms, and cloud services.
-- Do NOT include soft skills (e.g. "communication", "teamwork").
-- Do NOT include job titles, company names, or years of experience.
-- Return each skill exactly as it appears in the resume (do not abbreviate or expand).
-- Return a flat JSON object — no markdown, no code fences, no explanation.
-
-Format (strict):
-{"skills": ["skill1", "skill2", "skill3"]}
-
-Resume:
-${resumeText}`;
-
 // ── Model fallback list ───────────────────────────────────────────────────────
 // gemini-1.5-flash was deprecated from the v1beta endpoint.
 // Try models in order; first successful response wins.
@@ -61,24 +41,21 @@ const MODEL_FALLBACK_LIST = [
     "gemini-3.5-flash-lite", // lightweight fallback
 ];
 
-/**
- * extractSkillsWithGemini
- *
- * Sends the resume text to Gemini and parses the returned JSON.
- * Tries each model in MODEL_FALLBACK_LIST until one succeeds.
- * Throws only if ALL models fail, so the caller can fall back gracefully.
- *
- * @param {string} resumeText — plain text extracted from a PDF resume
- * @returns {Promise<string[]>} — array of raw skill strings from Gemini
- */
-export async function extractSkillsWithGemini(resumeText) {
-    if (!resumeText || resumeText.trim().length < 50) {
-        return [];
-    }
-
+// ─────────────────────────────────────────────────────────────────────────────
+// generateJSONFromGemini
+//
+// Shared low-level helper: sends a prompt to Gemini, handles model fallback,
+// strips any accidental markdown fences, and returns parsed JSON.
+//
+// Both extractSkillsWithGemini and generateDocumentationWithGemini call this
+// so the fallback/parsing logic lives in exactly one place.
+//
+// @param {string} prompt  — the full prompt string to send
+// @returns {Promise<any>} — parsed JSON value (object, array, etc.)
+// @throws  {Error}        — if all models fail or response is not valid JSON
+// ─────────────────────────────────────────────────────────────────────────────
+export async function generateJSONFromGemini(prompt) {
     const client = getClient();
-    const prompt = buildPrompt(resumeText.slice(0, 12000)); // cap at ~12k chars
-
     let lastError = null;
 
     for (const modelName of MODEL_FALLBACK_LIST) {
@@ -101,14 +78,8 @@ export async function extractSkillsWithGemini(resumeText) {
                 throw new Error(`Gemini returned non-JSON response: ${responseText.slice(0, 200)}`);
             }
 
-            if (!Array.isArray(parsed.skills)) {
-                throw new Error("Gemini response missing 'skills' array.");
-            }
-
-            console.log(`[geminiService] ✓ Success with model: ${modelName}, got ${parsed.skills.length} skills`);
-
-            // Filter out empty / non-string entries
-            return parsed.skills.filter((s) => typeof s === "string" && s.trim().length > 0);
+            console.log(`[geminiService] ✓ Success with model: ${modelName}`);
+            return parsed;
 
         } catch (err) {
             console.warn(`[geminiService] Model "${modelName}" failed: ${err.message}`);
@@ -119,4 +90,53 @@ export async function extractSkillsWithGemini(resumeText) {
 
     // All models exhausted — propagate the last error
     throw new Error(`All Gemini models failed. Last error: ${lastError?.message}`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ATS extraction prompt
+// ─────────────────────────────────────────────────────────────────────────────
+const buildSkillExtractionPrompt = (resumeText) =>
+    `You are an ATS (Applicant Tracking System) skill extraction engine.
+
+Your task is to extract ONLY technical skills from the provided resume text.
+
+Rules:
+- Include programming languages, frameworks, libraries, tools, databases, platforms, and cloud services.
+- Do NOT include soft skills (e.g. "communication", "teamwork").
+- Do NOT include job titles, company names, or years of experience.
+- Return each skill exactly as it appears in the resume (do not abbreviate or expand).
+- Return a flat JSON object — no markdown, no code fences, no explanation.
+
+Format (strict):
+{"skills": ["skill1", "skill2", "skill3"]}
+
+Resume:
+${resumeText}`;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// extractSkillsWithGemini
+//
+// Sends the resume text to Gemini and parses the returned JSON.
+// Throws only if ALL models fail, so the caller can fall back gracefully.
+//
+// @param {string} resumeText — plain text extracted from a PDF resume
+// @returns {Promise<string[]>} — array of raw skill strings from Gemini
+// ─────────────────────────────────────────────────────────────────────────────
+export async function extractSkillsWithGemini(resumeText) {
+    if (!resumeText || resumeText.trim().length < 50) {
+        return [];
+    }
+
+    const prompt = buildSkillExtractionPrompt(resumeText.slice(0, 12000)); // cap at ~12k chars
+
+    const parsed = await generateJSONFromGemini(prompt);
+
+    if (!Array.isArray(parsed.skills)) {
+        throw new Error("Gemini response missing 'skills' array.");
+    }
+
+    console.log(`[geminiService] Extracted ${parsed.skills.length} skills from resume.`);
+
+    // Filter out empty / non-string entries
+    return parsed.skills.filter((s) => typeof s === "string" && s.trim().length > 0);
 }
