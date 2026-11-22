@@ -15,3 +15,255 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+
+/* ─── Job Tracker Design tokens ─────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --c-bg: #f9f9f8;
+  --c-surface: #ffffff;
+  --c-surface-raised: #fafaf9;
+
+  /* Borders */
+  --c-border: #e8e6e3;
+  --c-border-subtle: #f0eeed;
+  --c-border-strong: #d0cdc9;
+
+  /* Text */
+  --c-txt: #18181b;
+  --c-txt-2: #6b7280;
+  --c-txt-3: #9ca3af;
+
+  /* Accent (near-black) */
+  --c-accent: #18181b;
+  --c-accent-hover: #27272a;
+  --c-accent-bg: #f4f4f5;
+
+  /* Status */
+  --c-wishlist: #8b5cf6;
+  --c-wishlist-bg: #f5f3ff;
+  --c-applied: #3b82f6;
+  --c-applied-bg: #eff6ff;
+  --c-interview: #f59e0b;
+  --c-interview-bg: #fffbeb;
+  --c-offer: #10b981;
+  --c-offer-bg: #ecfdf5;
+  --c-rejected: #ef4444;
+  --c-rejected-bg: #fef2f2;
+
+  /* Tags */
+  --c-tag-remote: #0891b2;
+  --c-tag-remote-bg: #e0f2fe;
+  --c-tag-internship: #7c3aed;
+  --c-tag-internship-bg: #ede9fe;
+  --c-tag-dream: #db2777;
+  --c-tag-dream-bg: #fce7f3;
+  --c-tag-referral: #ea580c;
+  --c-tag-referral-bg: #ffedd5;
+  --c-tag-contract: #374151;
+  --c-tag-contract-bg: #f3f4f6;
+  --c-tag-hybrid: #0f766e;
+  --c-tag-hybrid-bg: #ccfbf1;
+  --c-tag-on-site: #1d4ed8;
+  --c-tag-on-site-bg: #dbeafe;
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--c-border);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--c-border-strong);
+}
+
+/* ─── Job Tracker Component primitives ─────────────────────── */
+.sg-focus {
+  outline: none;
+}
+.sg-focus:focus-visible {
+  box-shadow: 0 0 0 2px var(--c-bg), 0 0 0 3.5px var(--c-accent);
+}
+
+.sg-input {
+  width: 100%;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  background: var(--c-bg);
+  color: var(--c-txt);
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.12s;
+}
+.sg-input::placeholder {
+  color: var(--c-txt-3);
+}
+.sg-input:focus {
+  border-color: var(--c-border-strong);
+}
+
+.sg-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+  background: var(--c-accent);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.sg-btn-primary:hover {
+  background: var(--c-accent-hover);
+}
+.sg-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sg-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--c-txt-2);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+}
+.sg-btn-ghost:hover {
+  color: var(--c-txt);
+  background: var(--c-accent-bg);
+}
+
+.sg-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--c-rejected);
+  background: var(--c-rejected-bg);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.sg-btn-danger:hover {
+  background: #fee2e2;
+  border-color: var(--c-rejected);
+}
+
+/* ─── Skeleton shimmer ────────────────────────────────────── */
+@keyframes shimmer {
+  0% {
+    background-position: -600px 0;
+  }
+  100% {
+    background-position: 600px 0;
+  }
+}
+.sg-skeleton {
+  border-radius: 5px;
+  background: linear-gradient(90deg, #f0eeec 25%, #e8e6e3 50%, #f0eeec 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+/* ─── Filter / search progress bar ───────────────────────── */
+@keyframes progressSlide {
+  0% {
+    transform: translateX(-100%);
+  }
+  60% {
+    transform: translateX(20%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+.sg-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 9999;
+  background: var(--c-border-subtle);
+  overflow: hidden;
+  pointer-events: none;
+}
+.sg-progress-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--c-accent) 0%, #7c3aed 50%, var(--c-accent) 100%);
+  animation: progressSlide 1.1s ease-in-out infinite;
+}
+
+/* ─── Dimmed overlay during refetch ──────────────────────── */
+.sg-fetching-overlay {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.sg-board-content {
+  transition: opacity 0.2s ease;
+}
+
+/* ─── Modal enter ─────────────────────────────────────────── */
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.sg-modal {
+  animation: modalIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ─── Modal overlay fade ──────────────────────────────────── */
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+[style*="position: fixed"][style*="zIndex: 200"],
+[style*="position: fixed"][style*="zIndex: 300"] {
+  animation: overlayFadeIn 0.15s ease forwards;
+}
+
+/* ─── Misc ────────────────────────────────────────────────── */
+.sg-divider {
+  height: 1px;
+  background: var(--c-border);
+}
+.sg-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+}
