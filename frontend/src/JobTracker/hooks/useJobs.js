@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  getJobs, createJob, updateJob, deleteJob,
+  getJobs, seedJobs, createJob, updateJob, deleteJob,
   updateStatus, updateTags, updateReminder,
 } from '../services/jobApi';
 
@@ -82,12 +82,27 @@ export function useJobs(filters = {}) {
     return res.data;
   }, []);
 
+  const seedDemoJobs = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await seedJobs();
+      setJobs(res.data.jobs || []);
+      return res.data.jobs;
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to seed sample jobs');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     jobs,
     loading,
     fetching,
     error,
     refetch: fetchJobs,
-    addJob, editJob, removeJob, moveJob, setTags, setReminder,
+    addJob, editJob, removeJob, moveJob, setTags, setReminder, seedDemoJobs,
   };
 }

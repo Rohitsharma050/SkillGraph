@@ -12,6 +12,7 @@ export default function BoardView({
   openEdit,
   openDetails,
   requestDelete,
+  onSeed,
 }) {
   const onDragEnd = async ({ destination, source, draggableId }) => {
     if (!destination || destination.droppableId === source.droppableId) return;
@@ -21,18 +22,66 @@ export default function BoardView({
   const colJobs = (s) => jobs.filter((j) => j.status === s);
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div
-        style={{
-          display: 'flex',
-          overflowX: 'auto',
-          gap: 12,
-          padding: '16px 20px',
-          height: 'calc(100vh - 140px)',
-          alignItems: 'stretch',
-          boxSizing: 'border-box',
-        }}
-      >
+    <div>
+      {jobs.length === 0 && !loading && onSeed && (
+        <div
+          style={{
+            margin: '16px 20px 0',
+            padding: '12px 18px',
+            background: 'var(--c-surface)',
+            border: '1px dashed var(--c-border)',
+            borderRadius: 10,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 16 }}>💼</span>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-txt)', margin: 0 }}>
+                Your job pipeline is currently empty
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--c-txt-2)', margin: '2px 0 0' }}>
+                Add your dream roles manually, or load 8 pre-configured sample applications (Google, Stripe, Linear...) to explore the board and analytics.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onSeed}
+            style={{
+              padding: '6px 14px',
+              borderRadius: 8,
+              fontSize: 12,
+              fontWeight: 600,
+              background: '#1a1a1a',
+              color: '#fff',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            Load Sample Applications
+          </button>
+        </div>
+      )}
+
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div
+          style={{
+            display: 'flex',
+            overflowX: 'auto',
+            gap: 12,
+            padding: '16px 20px',
+            height: 'calc(100vh - 140px)',
+            alignItems: 'stretch',
+            boxSizing: 'border-box',
+          }}
+        >
         {STATUSES.map((status) => {
           const cfg = STATUS_CFG[status];
           const col = colJobs(status);
@@ -181,6 +230,7 @@ export default function BoardView({
         })}
       </div>
     </DragDropContext>
+    </div>
   );
 }
 

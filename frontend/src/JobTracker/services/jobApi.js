@@ -13,6 +13,7 @@ jobApi.interceptors.request.use((config) => {
 
 // ── Jobs API ───────────────────────────────────────────────
 export const getJobs        = (params = {}) => jobApi.get('/jobs', { params });
+export const seedJobs       = ()            => jobApi.post('/jobs/seed');
 export const createJob      = (data)        => jobApi.post('/jobs', data);
 export const updateJob      = (id, data)    => jobApi.put(`/jobs/${id}`, data);
 export const deleteJob      = (id)          => jobApi.delete(`/jobs/${id}`);

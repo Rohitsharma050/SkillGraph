@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '.env') });
 dns.setServers(['1.1.1.1', '8.8.8.8']);
 
-const sampleJobs = [
+export const sampleJobs = [
   {
     company: 'Google',
     role: 'Frontend Engineer',
@@ -115,6 +115,35 @@ const sampleJobs = [
   },
 ];
 
+export async function seedJobsForUser(userId) {
+  await jobModel.deleteMany({ user: userId });
+
+  const createdJobs = [];
+  for (const data of sampleJobs) {
+    const job = new jobModel({
+      ...data,
+      user: userId,
+    });
+
+    job.activityLog.push({
+      action: 'Created',
+      detail: `Added to ${data.status}`,
+    });
+
+    if (data.status !== 'Wishlist') {
+      job.activityLog.push({
+        action: 'Status changed',
+        detail: `Wishlist → ${data.status}`,
+      });
+    }
+
+    await job.save();
+    createdJobs.push(job);
+  }
+
+  return createdJobs;
+}
+
 export async function seedJobsForAllUsers() {
   try {
     const mongoUri = process.env.MONGODB_URI;
@@ -130,28 +159,7 @@ export async function seedJobsForAllUsers() {
 
     for (const user of users) {
       console.log(`Seeding jobs for user: ${user.name} (${user.email})...`);
-      await jobModel.deleteMany({ user: user._id });
-
-      for (const data of sampleJobs) {
-        const job = new jobModel({
-          ...data,
-          user: user._id,
-        });
-
-        job.activityLog.push({
-          action: 'Created',
-          detail: `Added to ${data.status}`,
-        });
-
-        if (data.status !== 'Wishlist') {
-          job.activityLog.push({
-            action: 'Status changed',
-            detail: `Wishlist → ${data.status}`,
-          });
-        }
-
-        await job.save();
-      }
+      await seedJobsForUser(user._id);
     }
 
     console.log('Successfully seeded sample jobs for ALL users in the database!');
@@ -162,4 +170,7 @@ export async function seedJobsForAllUsers() {
   }
 }
 
-seedJobsForAllUsers();
+// Only run automatically if executed directly from node CLI
+if (process.argv[1] && process.argv[1].replace(/\\/g, '/').endsWith('seedJobs.js')) {
+  seedJobsForAllUsers();
+}

@@ -1,11 +1,24 @@
 import express from "express";
 import Job, { VALID_STATUSES, VALID_TAGS } from "../Models/jobModel.js";
 import authMiddleware from "../Middleware/authMiddleware.js";
+import { seedJobsForUser } from "../seedJobs.js";
 
 export const jobRouter = express.Router();
 
 // All routes are protected by authMiddleware (req.userId is populated from JWT)
 jobRouter.use(authMiddleware);
+
+// ─── POST /api/jobs/seed ───────────────────────────────────────────────────
+// Seeds realistic sample jobs for the logged-in user
+jobRouter.post("/seed", async (req, res) => {
+  try {
+    const jobs = await seedJobsForUser(req.userId);
+    res.json({ message: "Sample jobs seeded successfully", jobs });
+  } catch (err) {
+    console.error("POST /jobs/seed error:", err);
+    res.status(500).json({ message: "Failed to seed sample jobs" });
+  }
+});
 
 function logActivity(job, action, detail = "") {
   if (!job.activityLog) {

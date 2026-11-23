@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutGrid, BarChart3, Plus, ArrowLeft } from 'lucide-react';
+import { LayoutGrid, BarChart3, Plus, ArrowLeft, Sparkles } from 'lucide-react';
 import { AppContext } from '../Context/AppContext';
 import DashboardNavbar from '../Components/DashboardNavbar';
 import BoardView from './components/BoardView';
@@ -41,6 +41,7 @@ const JobDashboard = () => {
     editJob,
     removeJob,
     moveJob,
+    seedDemoJobs,
   } = useJobs(filters);
 
   const openAdd = (status = 'Wishlist') => {
@@ -228,8 +229,33 @@ const JobDashboard = () => {
           </div>
         )}
 
-        {/* Right: Add Job button */}
+        {/* Right: Add Job & Seed buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={seedDemoJobs}
+            disabled={loading}
+            title="Populate 8 realistic demo applications (Google, Stripe, Linear, Netflix...)"
+            style={{
+              padding: '8px 14px',
+              borderRadius: 99,
+              fontSize: 12,
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              background: 'var(--c-surface-raised, #f4f4f5)',
+              border: '1px solid var(--c-border)',
+              color: 'var(--c-txt)',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--c-txt-3)')}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--c-border)')}
+          >
+            <Sparkles size={13} style={{ color: '#d97706' }} />
+            {total === 0 ? 'Load Demo Jobs' : 'Reset Demo Jobs'}
+          </button>
+
           <button
             onClick={() => openAdd('Wishlist')}
             className="sg-btn-primary"
@@ -256,6 +282,7 @@ const JobDashboard = () => {
             openEdit={openEdit}
             openDetails={openDetails}
             requestDelete={requestDelete}
+            onSeed={seedDemoJobs}
           />
         ) : (
           <AnalyticsView jobs={jobs} loading={loading} />
