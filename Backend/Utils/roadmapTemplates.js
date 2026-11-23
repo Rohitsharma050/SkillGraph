@@ -20,7 +20,7 @@
 //               These three fields power the priority-weighted topo sort.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const templates = {
+export const templates = {
 
     // ── 1. Full Stack Developer ─────────────────────────────────────────────
     "Full Stack Developer": {
