@@ -43,14 +43,24 @@ const ResourceCard = ({ resource }) => {
             className="group flex flex-col gap-2 p-4 rounded-xl border border-zinc-100
                 bg-white hover:border-zinc-300 hover:shadow-sm transition-all duration-200"
         >
-            {/* Type + Difficulty badges */}
-            <div className="flex items-center gap-2 flex-wrap">
+            {/* Type + Difficulty + Duration + Level badges */}
+            <div className="flex items-center gap-1.5 flex-wrap">
                 <span className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${typeMeta.color}`}>
                     {typeMeta.icon} {typeMeta.label}
                 </span>
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${diffColor}`}>
                     {resource.difficulty}
                 </span>
+                {resource.durationMinutes && (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-700">
+                        ⏱ {resource.durationMinutes} min
+                    </span>
+                )}
+                {resource.targetProficiency && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+                        Target Lvl {resource.targetProficiency}
+                    </span>
+                )}
                 {resource.isFree === false && (
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
                         Paid

@@ -6,7 +6,8 @@ import DashboardNavbar from "../Components/DashboardNavbar";
 import RoadmapHistory from "../Components/RoadmapHistory";
 import GraphRoadmap from "./components/GraphRoadmap.jsx";
 import RoadmapDocumentation from "./components/RoadmapDocumentation.jsx";
-import { FileText } from "lucide-react";
+import WeeklyPlanView from "./components/WeeklyPlanView.jsx";
+import { FileText, Calendar } from "lucide-react";
 
 
 const statusMeta = {
@@ -16,6 +17,13 @@ const statusMeta = {
     badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
     card: "border-emerald-200 bg-emerald-50/40",
     ring: "ring-2 ring-emerald-300",
+  },
+  in_progress: {
+    label: "In Progress",
+    dot: "bg-amber-500",
+    badge: "bg-amber-50 text-amber-700 border-amber-300",
+    card: "border-amber-300 bg-amber-50/40 hover:border-amber-400 hover:shadow-md",
+    ring: "ring-2 ring-amber-200",
   },
   available: {
     label: "Available",
@@ -36,7 +44,9 @@ const statusMeta = {
 
 const RoadmapNode = ({ node, onMarkComplete, marking, onViewResources }) => {
   const meta = statusMeta[node.status] || statusMeta.available;
-  const isMarkable = node.status === "available";
+  const isMarkable = node.status === "available" || node.status === "in_progress";
+  const currentProf = node.proficiency ?? (node.status === "completed" ? (node.targetProficiency || 2) : 0);
+  const targetProf = node.targetProficiency || 2;
 
   return (
     <div
@@ -58,24 +68,36 @@ const RoadmapNode = ({ node, onMarkComplete, marking, onViewResources }) => {
       </div>
 
       {/* Description */}
-      <p className="text-xs text-zinc-500 leading-relaxed pl-4 mb-3">
-        {node.description}
-      </p>
+      {node.description && (
+        <p className="text-xs text-zinc-500 leading-relaxed pl-4 mb-3">
+          {node.description}
+        </p>
+      )}
 
-      {/* Level badge */}
+      {/* Proficiency & Level badge */}
+      <div className="pl-4 flex items-center justify-between gap-2 flex-wrap mb-3">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-700">
+            Proficiency: Lvl {currentProf}/{targetProf}
+          </span>
+          {node.remainingHours !== undefined && node.status !== "completed" && (
+            <span className="text-[10px] font-medium text-zinc-500">
+              · {node.remainingHours}h remaining
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Footer Actions */}
       <div className="pl-4 flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] text-zinc-400 font-medium">
-          Level {node.level}
-        </span>
-
         {/* Mark Complete */}
         {isMarkable && (
           <button
             onClick={() => onMarkComplete(node.id)}
             disabled={marking === node.id}
-            className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-black text-white hover:bg-zinc-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-black text-white hover:bg-zinc-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
-            {marking === node.id ? "Saving…" : "✓ Mark Complete"}
+            {marking === node.id ? "Saving…" : "✓ Complete"}
           </button>
         )}
 
@@ -139,17 +161,15 @@ const ProgressCard = ({ percentage, completedCount, totalCount }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const LearningStepCard = ({ step, isCompleted }) => (
   <div
-    className={`flex gap-4 p-4 rounded-2xl border transition-all duration-200 ${
-      isCompleted
+    className={`flex gap-4 p-4 rounded-2xl border transition-all duration-200 ${isCompleted
         ? "border-emerald-200 bg-emerald-50/40"
         : "border-black/10 bg-white"
-    }`}
+      }`}
   >
     {/* Order number */}
     <div
-      className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-        isCompleted ? "bg-emerald-500 text-white" : "bg-black text-white"
-      }`}
+      className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${isCompleted ? "bg-emerald-500 text-white" : "bg-black text-white"
+        }`}
     >
       {isCompleted ? "✓" : step.order}
     </div>
@@ -220,58 +240,84 @@ const RoadmapPage = () => {
     fetchRoadmap();
   }, [fetchRoadmap]);
 
-  // ── Mark a node as complete ───────────────────────────────────────────────
+  // ── Mark a node as complete / advance proficiency ────────────────────────
   const handleMarkComplete = async (nodeId) => {
     if (!roadmap) return;
     setMarking(nodeId);
 
     try {
-      const newCompleted = [...new Set([...roadmap.completedNodes, nodeId])];
-      const newProgress = Math.round(
-        (newCompleted.length / roadmap.nodes.length) * 100
-      );
+      const node = roadmap.nodes.find((n) => n.id === nodeId);
+      const targetProf = node?.targetProficiency || 2;
 
-      const { data } = await axios.patch(
+      const { data } = await axios.post(
         `${backendUrl}/api/roadmaps/${roadmapId}/progress`,
-        { completedNodes: newCompleted, progressPercentage: newProgress },
+        {
+          eventType: "level_set",
+          skillId: nodeId,
+          newLevel: targetProf,
+          minutesSpent: 0,
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (data.success) {
-        // Recompute node statuses locally from backend response
-        // Build prerequisite lookup from edges
-        const prereqMap = {};
-        for (const edge of roadmap.edges) {
-          if (edge.relation === "prerequisite") {
-            if (!prereqMap[edge.to]) prereqMap[edge.to] = [];
-            prereqMap[edge.to].push(edge.from);
-          }
-        }
-
-        const completedSet = new Set(data.completedNodes);
-        const updatedNodes = roadmap.nodes.map((n) => {
-          let status;
-          if (completedSet.has(n.id)) {
-            status = "completed";
-          } else {
-            const prereqs = prereqMap[n.id] || [];
-            const allDone = prereqs.every((pid) => completedSet.has(pid));
-            status = prereqs.length === 0 || allDone ? "available" : "locked";
-          }
-          return { ...n, status };
-        });
-
         setRoadmap((prev) => ({
           ...prev,
-          nodes: updatedNodes,
-          completedNodes: data.completedNodes,
-          progressPercentage: data.progressPercentage,
+          nodes: data.nodes || prev.nodes,
+          completedNodes: data.roadmap?.completedNodes || prev.completedNodes,
+          progressPercentage: data.progressPercentage ?? prev.progressPercentage,
+          plan: data.plan || prev.plan,
+          speedFactor: data.speedFactor || prev.speedFactor,
         }));
       }
     } catch (err) {
       console.error("Mark complete error:", err);
     } finally {
       setMarking(null);
+    }
+  };
+
+  // ── Study Planner: Update Capacity / Deadline Settings ───────────────────
+  const handleUpdateSettings = async (settings) => {
+    if (!roadmap) return;
+    try {
+      const { data } = await axios.put(
+        `${backendUrl}/api/roadmaps/${roadmapId}/settings`,
+        settings,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (data.success) {
+        setRoadmap((prev) => ({
+          ...prev,
+          planSettings: data.planSettings,
+          plan: data.plan,
+        }));
+      }
+    } catch (err) {
+      console.error("Update settings error:", err);
+    }
+  };
+
+  // ── Study Planner: Log Study Activity & Adapt Schedule ───────────────────
+  const handleLogProgress = async (logPayload) => {
+    if (!roadmap) return;
+    try {
+      const { data } = await axios.post(
+        `${backendUrl}/api/roadmaps/${roadmapId}/progress`,
+        logPayload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (data.success) {
+        setRoadmap((prev) => ({
+          ...prev,
+          nodes: data.nodes || prev.nodes,
+          progressPercentage: data.progressPercentage ?? prev.progressPercentage,
+          plan: data.plan || prev.plan,
+          speedFactor: data.speedFactor || prev.speedFactor,
+        }));
+      }
+    } catch (err) {
+      console.error("Log progress error:", err);
     }
   };
 
@@ -309,11 +355,11 @@ const RoadmapPage = () => {
   // ── Derived data ──────────────────────────────────────────────────────────
   const nodesByLevel = roadmap
     ? roadmap.nodes.reduce((acc, node) => {
-        const lvl = node.level || 1;
-        if (!acc[lvl]) acc[lvl] = [];
-        acc[lvl].push(node);
-        return acc;
-      }, {})
+      const lvl = node.level || 1;
+      if (!acc[lvl]) acc[lvl] = [];
+      acc[lvl].push(node);
+      return acc;
+    }, {})
     : {};
   const levels = Object.keys(nodesByLevel)
     .map(Number)
@@ -327,10 +373,10 @@ const RoadmapPage = () => {
   const fmtDate = (iso) =>
     iso
       ? new Date(iso).toLocaleDateString("en-IN", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
       : "";
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -459,14 +505,16 @@ const RoadmapPage = () => {
                     <p className="text-xs text-zinc-400 mt-0.5">
                       {viewMode === "graph"
                         ? "Interactive graph — hover a node to see learning resources."
-                        : viewMode === "list"
-                        ? "Skills ordered by prerequisite level. Complete each layer before advancing."
-                        : "AI-generated guide explaining each skill, learning sequence, and a capstone project."}
+                        : viewMode === "plan"
+                          ? "Weekly adaptive study planner with capacity simulation and deadline control."
+                          : viewMode === "list"
+                            ? "Skills ordered by prerequisite level. Complete each layer before advancing."
+                            : "AI-generated guide explaining each skill, learning sequence, and a capstone project."}
                     </p>
                   </div>
 
                   {/* View Toggle */}
-                  <div className="flex items-center gap-1 p-0.5 rounded-xl bg-zinc-100 border border-zinc-200">
+                  <div className="flex items-center gap-1 p-0.5 rounded-xl bg-zinc-100 border border-zinc-200 flex-wrap">
                     <button
                       onClick={() => setViewMode("graph")}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200
@@ -475,6 +523,16 @@ const RoadmapPage = () => {
                           : "text-zinc-500 hover:text-zinc-700"}`}
                     >
                       🕸 Graph
+                    </button>
+                    <button
+                      id="btn-view-plan"
+                      onClick={() => setViewMode("plan")}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200
+                        ${viewMode === "plan"
+                          ? "bg-white text-black shadow-sm border border-black/10"
+                          : "text-zinc-500 hover:text-zinc-700"}`}
+                    >
+                      <Calendar size={12} /> Study Plan
                     </button>
                     <button
                       onClick={() => setViewMode("list")}
@@ -505,6 +563,17 @@ const RoadmapPage = () => {
                     roadmapEdges={roadmap.edges}
                     onMarkComplete={handleMarkComplete}
                     marking={marking}
+                    backendUrl={backendUrl}
+                    token={token}
+                  />
+                )}
+
+                {/* ── Adaptive Weekly Study Plan View ──────────────────────── */}
+                {viewMode === "plan" && (
+                  <WeeklyPlanView
+                    roadmap={roadmap}
+                    onUpdateSettings={handleUpdateSettings}
+                    onLogProgress={handleLogProgress}
                     backendUrl={backendUrl}
                     token={token}
                   />
@@ -687,11 +756,10 @@ const RoadmapPage = () => {
                       return (
                         <span
                           key={skill}
-                          className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition ${
-                            isDone
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition ${isDone
                               ? "bg-emerald-50 text-emerald-700 border-emerald-200 line-through"
                               : "bg-zinc-50 text-zinc-700 border-zinc-200"
-                          }`}
+                            }`}
                         >
                           {skill}
                         </span>
@@ -765,11 +833,10 @@ const RoadmapPage = () => {
                   {/* Feedback message */}
                   {regenMsg && (
                     <p
-                      className={`text-xs font-medium text-center px-2 py-1.5 rounded-lg ${
-                        regenMsg.startsWith("✓")
+                      className={`text-xs font-medium text-center px-2 py-1.5 rounded-lg ${regenMsg.startsWith("✓")
                           ? "bg-emerald-50 text-emerald-700"
                           : "bg-red-50 text-red-600"
-                      }`}
+                        }`}
                     >
                       {regenMsg}
                     </p>

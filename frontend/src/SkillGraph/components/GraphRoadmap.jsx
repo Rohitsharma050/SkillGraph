@@ -35,10 +35,11 @@ const nodeTypes = { skillNode: SkillNode };
 // ── Status → minimap node colour ─────────────────────────────────────────────
 const minimapNodeColor = (node) => {
     switch (node.data?.status) {
-        case "completed": return "#10b981"; // emerald-500
-        case "available": return "#6366f1"; // indigo-500
-        case "locked":    return "#d1d5db"; // gray-300
-        default:          return "#94a3b8";
+        case "completed":   return "#10b981"; // emerald-500
+        case "in_progress": return "#f59e0b"; // amber-500
+        case "available":   return "#6366f1"; // indigo-500
+        case "locked":      return "#d1d5db"; // gray-300
+        default:            return "#94a3b8";
     }
 };
 

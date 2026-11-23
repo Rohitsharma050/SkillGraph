@@ -21,12 +21,20 @@ import { motion, AnimatePresence } from "framer-motion";
 // ── Status theme tokens ───────────────────────────────────────────────────────
 const STATUS_THEME = {
     completed: {
-        card: "bg-emerald-50 border-emerald-300 shadow-emerald-100",
-        badge: "bg-emerald-500 text-white",
+        card: "bg-emerald-50 border-emerald-400 shadow-emerald-100",
+        badge: "bg-emerald-600 text-white",
         dot: "bg-emerald-500",
         label: "Completed",
         icon: "✓",
         handleColor: "#10b981",
+    },
+    in_progress: {
+        card: "bg-amber-50/90 border-amber-400 shadow-amber-100 hover:border-amber-500",
+        badge: "bg-amber-500 text-white",
+        dot: "bg-amber-500",
+        label: "In Progress",
+        icon: "⚡",
+        handleColor: "#f59e0b",
     },
     available: {
         card: "bg-white border-indigo-300 shadow-indigo-100 hover:border-indigo-500",
@@ -37,7 +45,7 @@ const STATUS_THEME = {
         handleColor: "#6366f1",
     },
     locked: {
-        card: "bg-zinc-50 border-zinc-200 opacity-70",
+        card: "bg-zinc-50 border-zinc-200 opacity-65",
         badge: "bg-zinc-200 text-zinc-500",
         dot: "bg-zinc-300",
         label: "Locked",
@@ -50,9 +58,14 @@ const SkillNode = ({ data }) => {
     const [hovered, setHovered] = useState(false);
 
     const theme = STATUS_THEME[data.status] || STATUS_THEME.available;
-    const isMarkable = data.status === "available";
+    const isMarkable = data.status === "available" || data.status === "in_progress";
     const isLocked = data.status === "locked";
     const isCompleted = data.status === "completed";
+    const isInProgress = data.status === "in_progress";
+
+    const currentProf = data.proficiency ?? (isCompleted ? (data.targetProficiency || 2) : 0);
+    const targetProf = data.targetProficiency || 2;
+    const remHours = data.remainingHours !== undefined ? data.remainingHours : null;
 
     return (
         <div
@@ -96,13 +109,21 @@ const SkillNode = ({ data }) => {
                     </p>
                 )}
 
-                {/* Footer row */}
-                <div className="pl-3.5 flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[9px] text-zinc-400 font-medium bg-zinc-100 px-1.5 py-0.5 rounded-full">
-                        Lvl {data.level}
+                {/* Footer row: Proficiency & Remaining Hours */}
+                <div className="pl-3.5 flex items-center justify-between gap-1 mb-2">
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-zinc-100 text-zinc-600">
+                        Lvl {currentProf}/{targetProf}
                     </span>
+                    {remHours !== null && !isCompleted && (
+                        <span className="text-[9px] font-semibold text-zinc-500">
+                            {remHours}h left
+                        </span>
+                    )}
+                </div>
 
-                    {/* Mark Complete button */}
+                {/* Action buttons */}
+                <div className="pl-3.5 flex items-center gap-1.5 flex-wrap">
+                    {/* Mark Done / Next Level button */}
                     {isMarkable && data.onMarkComplete && (
                         <button
                             onClick={(e) => {
@@ -110,10 +131,10 @@ const SkillNode = ({ data }) => {
                                 data.onMarkComplete(data.id);
                             }}
                             disabled={data.marking === data.id}
-                            className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-indigo-600 text-white
-                                hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="text-[9px] font-bold px-2.5 py-1 rounded-lg bg-zinc-900 text-white
+                                hover:bg-zinc-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                         >
-                            {data.marking === data.id ? "Saving…" : "✓ Mark Done"}
+                            {data.marking === data.id ? "Saving…" : "✓ Complete"}
                         </button>
                     )}
                 </div>
@@ -146,7 +167,7 @@ const SkillNode = ({ data }) => {
 
             {/* Completed check overlay */}
             {isCompleted && (
-                <span className="absolute top-2 right-2 text-emerald-500 text-sm font-bold">✓</span>
+                <span className="absolute top-2 right-2 text-emerald-600 text-sm font-bold">✓</span>
             )}
 
             {/* Bottom handle — emits edges to dependent skills */}
