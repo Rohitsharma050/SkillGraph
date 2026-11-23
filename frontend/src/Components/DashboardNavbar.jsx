@@ -1,12 +1,14 @@
-import React, { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useContext, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AppContext } from "../Context/AppContext";
 
 const DashboardNavbar = () => {
 
   const navigate = useNavigate();
-  const [openProfile , setOpenProfile] = useState(false)
-  const {token,setToken} = useContext(AppContext)
+  const location = useLocation();
+  const [openProfile , setOpenProfile] = useState(false);
+  const { setToken } = useContext(AppContext);
+  const isJobTracker = location.pathname.startsWith("/jobtracker");
 
   return (
      <nav
@@ -32,6 +34,7 @@ const DashboardNavbar = () => {
       <div>
 
         <h1
+          onClick={() => navigate("/dashboard")}
           className="
           text-2xl
           font-bold
@@ -51,18 +54,17 @@ const DashboardNavbar = () => {
         {/* Job Tracker Button */}
         <button
           onClick={() => navigate("/jobtracker/dashboard")}
-          className="
-          bg-black
+          className={`
+          ${isJobTracker ? "bg-zinc-900 ring-2 ring-black/20" : "bg-black hover:bg-gray-800"}
           text-white
           px-5
           py-2
           rounded-full
           text-sm
           font-medium
-          hover:bg-gray-800
           transition-all
           duration-300
-          "
+          `}
         >
           Job Tracker
         </button>

@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema({
         default: ""
     },
     skills: {
-        type: [String],
+        type: [mongoose.Schema.Types.Mixed],
         default: []
     }
 }, { timestamps: true });

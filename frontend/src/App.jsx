@@ -10,7 +10,7 @@ import LoginPage from './Pages/LoginPage'
 import SignupPage from './Pages/SignupPage'
 import Dashboard from './SkillGraph/Dashboard'
 import About from './Pages/About'
-import PrivacyPolicy from './Pages/PrivacyPolicy'
+import PolicyPage from './Pages/PolicyPage'
 import TermsOfService from './Pages/TermsOfServices'
 import Support from './Pages/Support'
 import Steps from './Pages/Steps'
@@ -28,10 +28,11 @@ function App() {
         <Route path ='/signup' element={<SignupPage/>}/>
         <Route path='/dashboard' element={<Dashboard/>}/>
         <Route path='/about' element={<About/>}/>
-        <Route path='/policy' element = {<PrivacyPolicy/>}/>
+        <Route path='/policy' element = {<PolicyPage/>}/>
         <Route path='/terms' element = {<TermsOfService/>}/>
         <Route path='/support' element = {<Support/>}/>
         <Route path='/guide' element = {<Steps/>}/>
+        <Route path='/jobtracker' element = {<JobDashboard/>}/>
         <Route path='/jobtracker/dashboard' element = {<JobDashboard/>}/>
         <Route path='/profile' element = {<Profile/>}/>
         <Route path='/roadmap/:roadmapId' element={<RoadmapPage/>}/>

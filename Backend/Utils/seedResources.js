@@ -448,8 +448,35 @@ const seed = async () => {
         await resourceModel.deleteMany({});
         console.log("Cleared existing resources");
 
-        const inserted = await resourceModel.insertMany(RESOURCES);
-        console.log(`Seeded ${inserted.length} resources successfully`);
+        // Enrich with Adaptive Planner fields
+        const enrichedResources = RESOURCES.map((res) => {
+            let targetProficiency = 1;
+            let durationMinutes = 90;
+            if (res.type === "project") {
+                targetProficiency = 3;
+                durationMinutes = 360;
+            } else if (res.type === "practice" || res.type === "course") {
+                targetProficiency = 2;
+                durationMinutes = 240;
+            } else if (res.type === "video") {
+                targetProficiency = 1;
+                durationMinutes = 120;
+            } else {
+                targetProficiency = 1;
+                durationMinutes = 60;
+            }
+
+            return {
+                ...res,
+                durationMinutes: res.durationMinutes || durationMinutes,
+                targetProficiency: res.targetProficiency || targetProficiency,
+                order: res.order || (targetProficiency === 1 ? 1 : targetProficiency === 2 ? 2 : 3),
+                required: res.required !== undefined ? res.required : true,
+            };
+        });
+
+        const inserted = await resourceModel.insertMany(enrichedResources);
+        console.log(`Seeded ${inserted.length} resources successfully with durations and proficiency levels.`);
 
         await mongoose.disconnect();
         console.log("Done.");

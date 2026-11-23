@@ -31,6 +31,25 @@ const resourceSchema = new mongoose.Schema(
             enum: ["beginner", "intermediate", "advanced"],
             default: "beginner",
         },
+        // ── Adaptive Planner Fields ───────────────────────────────────────
+        durationMinutes: {
+            type: Number,
+            default: 60,
+        },
+        targetProficiency: {
+            type: Number,
+            min: 1,
+            max: 3,
+            default: 1,
+        },
+        order: {
+            type: Number,
+            default: 1,
+        },
+        required: {
+            type: Boolean,
+            default: true,
+        },
         tags: {
             type: [String],
             default: [],
@@ -49,10 +68,10 @@ const resourceSchema = new mongoose.Schema(
 
 // ── Indexes ───────────────────────────────────────────────────────────────────
 resourceSchema.index({ skillName: 1 });
+resourceSchema.index({ skillName: 1, targetProficiency: 1, order: 1 });
 resourceSchema.index({ type: 1 });
 resourceSchema.index({ difficulty: 1 });
 resourceSchema.index({ tags: 1 });
-// Text index for full-text search across title, skillName, description, tags
 resourceSchema.index(
     { title: "text", skillName: "text", description: "text", tags: "text" },
     { name: "resource_text_search" }

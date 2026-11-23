@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const PrivacyPolicy = () => {
+const PolicyPage = () => {
   return (
     <div className="bg-white min-h-screen py-15 px-6 md:pl-20">
       <div className="max-w-5xl">
@@ -89,4 +89,4 @@ const PrivacyPolicy = () => {
   );
 };
 
-export default PrivacyPolicy;
+export default PolicyPage;

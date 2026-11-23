@@ -5,6 +5,15 @@ import {
     getUserRoadmaps,
     getRoadmapById,
     updateRoadmapProgress,
+    regenerateRoadmap,
+    generateDocumentation,
+    updatePlanSettings,
+    getRoadmapPlan,
+    logProgress,
+    getProgressHistory,
+    updateSkillProficiency,
+    exportPlanCalendar,
+    exportGapReportPdf,
 } from "../Controllers/RoadmapController.js";
 import authMiddleware from "../Middleware/authMiddleware.js";
 
@@ -28,3 +37,15 @@ roadmapRouter.post("/generate", authMiddleware, uploadResume, generateRoadmap);
 roadmapRouter.get("/", authMiddleware, getUserRoadmaps);
 roadmapRouter.get("/:id", authMiddleware, getRoadmapById);
 roadmapRouter.patch("/:id/progress", authMiddleware, updateRoadmapProgress);
+roadmapRouter.post("/:id/regenerate", authMiddleware, regenerateRoadmap);
+roadmapRouter.post("/:id/documentation", authMiddleware, generateDocumentation);
+
+// ── Adaptive Study Planner Routes ──────────────────────────────────────────
+roadmapRouter.put("/:id/settings", authMiddleware, updatePlanSettings);
+roadmapRouter.get("/:id/plan", authMiddleware, getRoadmapPlan);
+roadmapRouter.get("/:id/plan.ics", authMiddleware, exportPlanCalendar);
+roadmapRouter.get("/:id/report.pdf", authMiddleware, exportGapReportPdf);
+roadmapRouter.post("/:id/plan", authMiddleware, updatePlanSettings);
+roadmapRouter.post("/:id/progress", authMiddleware, logProgress);
+roadmapRouter.get("/:id/progress", authMiddleware, getProgressHistory);
+roadmapRouter.patch("/:id/skills/:skillId/proficiency", authMiddleware, updateSkillProficiency);
